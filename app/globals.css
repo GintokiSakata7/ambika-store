@@ -2404,3 +2404,202 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* ==========================================================================
+   Tactile Cart Adding & Added Animation
+   ========================================================================== */
+.btn-add-cart.added-pop {
+  background-color: #16a34a !important;
+  color: #ffffff !important;
+  animation: popEffect 0.3s ease;
+}
+
+@keyframes popEffect {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.cart-qty-indicator {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background-color: #0f766e;
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.product-card.in-cart {
+  border-color: #99f6e4;
+}
+
+/* ==========================================================================
+   Admin Filter Pills
+   ========================================================================== */
+.admin-filter-pill {
+  background: none;
+  border: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.admin-filter-pill:hover {
+  color: #09090b;
+}
+
+.admin-filter-pill.active {
+  background-color: #ffffff;
+  color: #09090b;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+/* ==========================================================================
+   Mobile Bottom Navigation & Native Bottom-Sheet Sheet Drawer
+   ========================================================================== */
+.mobile-bottom-nav {
+  display: none;
+}
+
+.mobile-floating-cart-pill {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  body {
+    padding-bottom: 74px;
+  }
+
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    z-index: 998;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    justify-content: space-around;
+    align-items: center;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .nav-tab-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: #64748b;
+    font-size: 0.68rem;
+    font-weight: 600;
+    cursor: pointer;
+    gap: 3px;
+    padding: 6px 0;
+    transition: all 0.15s ease;
+  }
+
+  .nav-tab-item.active {
+    color: #0f766e;
+  }
+
+  .nav-tab-icon-wrap {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .nav-tab-badge {
+    position: absolute;
+    top: -6px;
+    right: -10px;
+    background-color: #0f766e;
+    color: #ffffff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 1px 5px;
+    line-height: 1.2;
+  }
+
+  /* Floating Quick Cart Pill on mobile */
+  .mobile-floating-cart-pill {
+    display: block;
+    position: fixed;
+    bottom: 68px;
+    left: 12px;
+    right: 12px;
+    z-index: 997;
+    background-color: #0f766e;
+    color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(15, 118, 110, 0.35);
+    cursor: pointer;
+    animation: slideUpFade 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .cart-pill-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    font-weight: 600;
+    font-size: 0.88rem;
+  }
+
+  .cart-pill-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .cart-pill-divider {
+    opacity: 0.6;
+  }
+
+  .cart-pill-total {
+    font-weight: 800;
+  }
+
+  .cart-pill-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.84rem;
+  }
+
+  /* Bottom-Sheet style for cart drawer on phones */
+  .cart-drawer {
+    top: auto;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: 100% !important;
+    max-height: 88vh;
+    border-radius: 18px 18px 0 0;
+    transform: translateY(100%);
+    animation: sheetSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes sheetSlideUp {
+    to { transform: translateY(0); }
+  }
+
+  /* Floating WhatsApp on mobile */
+  .floating-wa-btn {
+    bottom: 128px;
+    right: 16px;
+  }
+}
+
+

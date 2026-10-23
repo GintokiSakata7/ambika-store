@@ -167,6 +167,9 @@ export default function CheckoutModal() {
       aria-modal="true"
     >
       <div className="modal-window">
+        {/* Mobile Drag Handle */}
+        <div className="mobile-sheet-handle" />
+
         {/* Modal Header */}
         <div className="modal-header">
           <div>

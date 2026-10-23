@@ -47,6 +47,20 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("products"); // "products" | "add" | "categories" | "orders" | "settings"
   const [searchFilter, setSearchFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [orderTypeFilter, setOrderTypeFilter] = useState("all"); // "all" | "delivery" | "pickup" | "wholesale"
+
+  // Order & Sales stats calculations
+  const totalSales = orders.reduce((sum, o) => sum + (Number(o.subtotal) || 0), 0);
+  const deliveryOrders = orders.filter((o) => o.orderType === "delivery");
+  const pickupOrders = orders.filter((o) => o.orderType === "pickup");
+  const wholesaleOrders = orders.filter((o) => o.items && o.items.some((i) => i.isWholesale));
+
+  const filteredOrders = orders.filter((o) => {
+    if (orderTypeFilter === "delivery") return o.orderType === "delivery";
+    if (orderTypeFilter === "pickup") return o.orderType === "pickup";
+    if (orderTypeFilter === "wholesale") return o.items && o.items.some((i) => i.isWholesale);
+    return true;
+  });
 
   // Inline editing state: { [productId]: { price, mrp, stock } }
   const [inlineEdits, setInlineEdits] = useState({});
@@ -208,43 +222,43 @@ export default function AdminDashboard() {
       <main className="container" style={{ padding: "28px 20px 80px" }}>
         {/* KPI Summary Cards Strip */}
         <section className="admin-kpi-grid">
+          <div className="admin-kpi-card" onClick={() => setActiveTab("orders")} style={{ cursor: "pointer" }}>
+            <div className="kpi-icon-box" style={{ background: "#ecfdf5", color: "#16a34a" }}>
+              <IconStore size={22} />
+            </div>
+            <div>
+              <div className="kpi-val" style={{ color: "#16a34a" }}>Rs. {totalSales}</div>
+              <div className="kpi-label">Total Recorded Sales</div>
+            </div>
+          </div>
+
+          <div className="admin-kpi-card" onClick={() => { setActiveTab("orders"); setOrderTypeFilter("all"); }} style={{ cursor: "pointer" }}>
+            <div className="kpi-icon-box">
+              <IconFileText size={22} />
+            </div>
+            <div>
+              <div className="kpi-val">{orders.length}</div>
+              <div className="kpi-label">{deliveryOrders.length} Deliveries • {pickupOrders.length} Pickups</div>
+            </div>
+          </div>
+
+          <div className="admin-kpi-card" onClick={() => { setActiveTab("orders"); setOrderTypeFilter("wholesale"); }} style={{ cursor: "pointer" }}>
+            <div className="kpi-icon-box" style={{ background: "#f0fdfa", color: "#0f766e" }}>
+              <IconTruck size={22} />
+            </div>
+            <div>
+              <div className="kpi-val">{wholesaleOrders.length}</div>
+              <div className="kpi-label">Wholesale / Bulk Orders</div>
+            </div>
+          </div>
+
           <div className="admin-kpi-card" onClick={() => setActiveTab("products")} style={{ cursor: "pointer" }}>
             <div className="kpi-icon-box">
               <IconPackage size={22} />
             </div>
             <div>
               <div className="kpi-val">{products.length}</div>
-              <div className="kpi-label">Active Catalog Items</div>
-            </div>
-          </div>
-
-          <div className="admin-kpi-card" onClick={() => setActiveTab("categories")} style={{ cursor: "pointer" }}>
-            <div className="kpi-icon-box">
-              <IconTag size={22} />
-            </div>
-            <div>
-              <div className="kpi-val">{categories.filter(c => c.id !== "all").length}</div>
-              <div className="kpi-label">Product Categories</div>
-            </div>
-          </div>
-
-          <div className="admin-kpi-card">
-            <div className="kpi-icon-box">
-              <IconTruck size={22} />
-            </div>
-            <div>
-              <div className="kpi-val">₹{settings.deliveryMinimum}</div>
-              <div className="kpi-label">Min Delivery Threshold</div>
-            </div>
-          </div>
-
-          <div className="admin-kpi-card" onClick={() => setActiveTab("orders")} style={{ cursor: "pointer" }}>
-            <div className="kpi-icon-box">
-              <IconFileText size={22} />
-            </div>
-            <div>
-              <div className="kpi-val">{orders.length}</div>
-              <div className="kpi-label">Incoming Orders</div>
+              <div className="kpi-label">{categories.filter(c => c.id !== "all").length} Active Categories</div>
             </div>
           </div>
         </section>
@@ -753,23 +767,51 @@ export default function AdminDashboard() {
         {/* TAB 4: INCOMING DEMO ORDERS LOG */}
         {activeTab === "orders" && (
           <section className="admin-content-panel">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
               <div>
                 <h3 style={{ fontSize: "1.2rem", color: "#0f172a", marginBottom: "4px" }}>
-                  Live Orders Log
+                  Live Orders &amp; Delivery Management
                 </h3>
                 <span style={{ fontSize: "0.82rem", color: "#64748b" }}>
-                  Captures all customer orders submitted via WhatsApp checkout
+                  Real-time log of customer bookings, GPS delivery routes, and counter pickups
                 </span>
+              </div>
+
+              {/* Order Filter Tabs */}
+              <div style={{ display: "inline-flex", gap: "6px", background: "#f1f5f9", padding: "4px", borderRadius: "6px" }}>
+                <button
+                  className={`admin-filter-pill ${orderTypeFilter === "all" ? "active" : ""}`}
+                  onClick={() => setOrderTypeFilter("all")}
+                >
+                  All ({orders.length})
+                </button>
+                <button
+                  className={`admin-filter-pill ${orderTypeFilter === "delivery" ? "active" : ""}`}
+                  onClick={() => setOrderTypeFilter("delivery")}
+                >
+                  Deliveries ({deliveryOrders.length})
+                </button>
+                <button
+                  className={`admin-filter-pill ${orderTypeFilter === "pickup" ? "active" : ""}`}
+                  onClick={() => setOrderTypeFilter("pickup")}
+                >
+                  Pickups ({pickupOrders.length})
+                </button>
+                <button
+                  className={`admin-filter-pill ${orderTypeFilter === "wholesale" ? "active" : ""}`}
+                  onClick={() => setOrderTypeFilter("wholesale")}
+                >
+                  Wholesale ({wholesaleOrders.length})
+                </button>
               </div>
             </div>
 
-            {orders.length === 0 ? (
+            {filteredOrders.length === 0 ? (
               <div style={{ textAlign: "center", padding: "50px 20px", color: "#64748b", background: "#f8fafc", borderRadius: "10px" }}>
                 <IconPackage size={42} style={{ margin: "0 auto 8px", color: "#94a3b8" }} />
-                <h4>No Demo Orders Logged Yet</h4>
+                <h4>No Orders In This Category</h4>
                 <p style={{ fontSize: "0.86rem", marginBottom: "16px" }}>
-                  Switch to Customer view, add items to cart, and click &quot;Send Order to WhatsApp&quot; to test placing orders!
+                  Switch filters above or open the storefront to place a demo order.
                 </p>
                 <button
                   className="btn-outline"
@@ -780,15 +822,29 @@ export default function AdminDashboard() {
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                {orders.map((ord) => (
+                {filteredOrders.map((ord) => (
                   <div key={ord.orderId} className="admin-order-card">
                     <div className="admin-order-head">
                       <div>
-                        <strong>{ord.orderId}</strong> • <span style={{ color: "#0f766e" }}>{ord.customer?.fullName}</span>
+                        <strong>#{ord.orderId}</strong> • <span style={{ color: "#0f766e", fontWeight: "700" }}>{ord.customer?.fullName}</span>
                         <div style={{ fontSize: "0.76rem", color: "#64748b" }}>Placed: {ord.date}</div>
                       </div>
 
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <span
+                          style={{
+                            fontSize: "0.72rem",
+                            fontWeight: "700",
+                            padding: "3px 8px",
+                            borderRadius: "4px",
+                            background: ord.orderType === "delivery" ? "#f0fdfa" : "#f8fafc",
+                            color: ord.orderType === "delivery" ? "#0f766e" : "#475569",
+                            border: "1px solid #e2e8f0"
+                          }}
+                        >
+                          {ord.orderType === "delivery" ? "Home Delivery" : "Store Pickup"}
+                        </span>
+
                         <select
                           className="admin-inline-input"
                           value={ord.status || "Placed"}
@@ -827,36 +883,69 @@ export default function AdminDashboard() {
                           href={`https://wa.me/91${ord.customer?.phone?.replace(/\D/g, "")}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={{ fontSize: "0.76rem", color: "#16a34a", textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: "4px", marginTop: "2px" }}
+                          style={{ fontSize: "0.76rem", color: "#16a34a", textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: "4px", marginTop: "3px" }}
                         >
                           <IconWhatsApp size={12} />
-                          <span>Chat on WhatsApp</span>
+                          <span>Direct WhatsApp Chat</span>
                         </a>
                       </div>
 
                       <div>
-                        <div style={{ fontSize: "0.78rem", color: "#64748b" }}>Delivery Address:</div>
-                        <div style={{ fontSize: "0.84rem" }}>
-                          {ord.orderType === "delivery"
-                            ? `${ord.customer?.address || "Address given"}, Pincode: ${ord.customer?.pincode || "N/A"}`
-                            : "Store Self-Pickup"}
+                        <div style={{ fontSize: "0.78rem", color: "#64748b" }}>Fulfillment Location:</div>
+                        <div style={{ fontSize: "0.84rem", color: "#1e293b" }}>
+                          {ord.orderType === "delivery" ? (
+                            <>
+                              <div>
+                                {ord.customer?.doorNo ? `Door/Flat: ${ord.customer.doorNo}, ` : ""}
+                                {ord.customer?.floor ? `Floor: ${ord.customer.floor}, ` : ""}
+                              </div>
+                              <div>{ord.customer?.address || "Address given"}</div>
+                              {ord.customer?.landmark && <div style={{ color: "#64748b" }}>Near: {ord.customer.landmark}</div>}
+                              <div style={{ fontWeight: 600 }}>PIN: {ord.customer?.pincode || "N/A"}</div>
+                              {ord.coords && ord.coords.latitude && (
+                                <a
+                                  href={`https://maps.google.com/?q=${ord.coords.latitude},${ord.coords.longitude}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    fontSize: "0.74rem",
+                                    color: "#0f766e",
+                                    background: "#f0fdfa",
+                                    padding: "3px 8px",
+                                    borderRadius: "4px",
+                                    border: "1px solid #ccfbf1",
+                                    marginTop: "4px",
+                                    textDecoration: "none",
+                                    fontWeight: 600
+                                  }}
+                                >
+                                  📍 Driver GPS Navigation Pin
+                                </a>
+                              )}
+                            </>
+                          ) : (
+                            <span style={{ color: "#0f766e", fontWeight: 600 }}>Depot Counter Pickup (Customer Collecting)</span>
+                          )}
                         </div>
                       </div>
 
                       <div>
                         <div style={{ fontSize: "0.78rem", color: "#64748b" }}>Order Total:</div>
-                        <div style={{ fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>
-                          ₹{ord.subtotal}
+                        <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "#0f766e" }}>
+                          Rs. {ord.subtotal}
                         </div>
                         <span style={{ fontSize: "0.72rem", color: "#64748b" }}>
-                          {ord.customer?.paymentMethod || "COD"}
+                          Payment: Cash on Delivery / Counter
                         </span>
                       </div>
                     </div>
 
-                    <div style={{ marginTop: "10px", paddingTop: "8px", borderTop: "1px dashed #e2e8f0", fontSize: "0.78rem", color: "#334155" }}>
-                      <strong>Items ({ord.items?.length || 0}):</strong>{" "}
-                      {ord.items?.map((it) => `${it.name} (x${it.quantity})`).join(", ")}
+                    <div style={{ marginTop: "10px", paddingTop: "8px", borderTop: "1px dashed #e2e8f0", fontSize: "0.8rem", color: "#334155" }}>
+                      <strong>Ordered Items ({ord.items?.length || 0}):</strong>{" "}
+                      {ord.items?.map((it) => `${it.name} (${it.unit || "Unit"}) x${it.quantity} [Rs. ${it.price * it.quantity}]`).join(" • ")}
                     </div>
                   </div>
                 ))}

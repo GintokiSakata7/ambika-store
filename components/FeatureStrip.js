@@ -15,8 +15,8 @@ export default function FeatureStrip() {
             <IconFlask size={20} />
           </div>
           <div className="feature-info">
-            <h4>Commercial Formulations</h4>
-            <p>High-potency disinfectant phenyl, safe-grade toilet acids, and pure mothballs.</p>
+            <h4>Commercial Grade</h4>
+            <p>Concentrated pine phenyl, toilet acid &amp; mothballs.</p>
           </div>
         </div>
 
@@ -25,8 +25,8 @@ export default function FeatureStrip() {
             <IconTruck size={20} />
           </div>
           <div className="feature-info">
-            <h4>Doorstep Delivery &gt; ₹{settings.deliveryMinimum}</h4>
-            <p>Fast local dispatch with instant live WhatsApp confirmation & address routing.</p>
+            <h4>Free Delivery &gt; ₹{settings.deliveryMinimum}</h4>
+            <p>Free home delivery above ₹500 or free store pickup.</p>
           </div>
         </div>
 
@@ -35,8 +35,8 @@ export default function FeatureStrip() {
             <IconShieldCheck size={20} />
           </div>
           <div className="feature-info">
-            <h4>Sealed & Leak-Proof</h4>
-            <p>Child-resistant safety caps and industrial grade bottles for acids and chemicals.</p>
+            <h4>Leak-Proof Packing</h4>
+            <p>Sealed containers with safety caps.</p>
           </div>
         </div>
 
@@ -45,8 +45,8 @@ export default function FeatureStrip() {
             <IconWhatsApp size={20} />
           </div>
           <div className="feature-info">
-            <h4>Direct WhatsApp Booking</h4>
-            <p>Zero friction. Select items, enter delivery address, and dispatch order instantly.</p>
+            <h4>1-Tap WhatsApp</h4>
+            <p>Quick booking with Ticket ID &amp; live tracking.</p>
           </div>
         </div>
       </div>

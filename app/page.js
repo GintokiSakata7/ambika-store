@@ -20,6 +20,7 @@ import ProductDetailModal from "../components/ProductDetailModal";
 import Toast from "../components/Toast";
 import FloatingWhatsApp from "../components/FloatingWhatsApp";
 import Footer from "../components/Footer";
+import MobileBottomNav from "../components/MobileBottomNav";
 import { IconSearch } from "../components/Icons";
 
 export default function HomePage() {
@@ -157,6 +158,9 @@ export default function HomePage() {
 
           {/* Footer */}
           <Footer />
+
+          {/* Sticky Mobile Bottom Navigation & Floating Cart Bar */}
+          <MobileBottomNav />
         </>
       )}
 

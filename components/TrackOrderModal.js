@@ -80,6 +80,9 @@ export default function TrackOrderModal() {
       aria-modal="true"
     >
       <div className="modal-window" style={{ maxWidth: "560px" }}>
+        {/* Mobile Drag Handle */}
+        <div className="mobile-sheet-handle" />
+
         {/* Header */}
         <div className="modal-header">
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>

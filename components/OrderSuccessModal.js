@@ -58,6 +58,9 @@ export default function OrderSuccessModal() {
       aria-modal="true"
     >
       <div className="modal-window" style={{ maxWidth: "520px" }}>
+        {/* Mobile Drag Handle */}
+        <div className="mobile-sheet-handle" />
+
         {/* Header */}
         <div className="modal-header">
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>

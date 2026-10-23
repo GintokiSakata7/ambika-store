@@ -2,11 +2,15 @@
 
 import React, { useState } from "react";
 import { useStore } from "../context/StoreContext";
-import { IconEye, IconPlus, IconMinus, IconShieldCheck } from "./Icons";
+import { IconEye, IconPlus, IconMinus, IconShieldCheck, IconCheck } from "./Icons";
 
 export default function ProductCard({ product }) {
-  const { addToCart, setActiveProductModal, t } = useStore();
+  const { addToCart, setActiveProductModal, cart, t } = useStore();
   const [qty, setQty] = useState(1);
+  const [justAdded, setJustAdded] = useState(false);
+
+  const cartItem = cart.find((item) => item.id === product.id);
+  const cartQty = cartItem ? cartItem.quantity : 0;
 
   const savings = Math.max(0, product.mrp - product.price);
 
@@ -20,13 +24,15 @@ export default function ProductCard({ product }) {
 
   const handleAdd = () => {
     addToCart(product, qty);
+    setJustAdded(true);
     setQty(1);
+    setTimeout(() => setJustAdded(false), 1400);
   };
 
   const badgeClass = (product.badge || "").toLowerCase().replace(/\s+/g, "-");
 
   return (
-    <article className="product-card">
+    <article className={`product-card ${cartQty > 0 ? "in-cart" : ""}`}>
       <div className="product-media-wrapper">
         <img src={product.image} alt={product.name} loading="lazy" />
 
@@ -36,11 +42,18 @@ export default function ProductCard({ product }) {
           </span>
         )}
 
+        {cartQty > 0 && (
+          <span className="cart-qty-indicator" title="Items in your cart">
+            {cartQty} in cart
+          </span>
+        )}
+
         {/* Quick View Button */}
         <button
           className="product-quick-view-btn"
           onClick={() => setActiveProductModal(product)}
           title="Quick view product details"
+          aria-label="View details"
         >
           <IconEye size={16} />
         </button>
@@ -63,33 +76,54 @@ export default function ProductCard({ product }) {
           </div>
         )}
 
-        <p className="product-desc-snippet">{product.description}</p>
-
         <div className="product-footer">
           <div className="product-price-row">
-            <span className="product-curr-price">₹{product.price}</span>
+            <span className="product-curr-price">Rs. {product.price}</span>
             {product.mrp > product.price && (
-              <span className="product-mrp-price">₹{product.mrp}</span>
+              <span className="product-mrp-price">Rs. {product.mrp}</span>
             )}
             {savings > 0 && (
-              <span className="product-save-badge">Save ₹{savings}</span>
+              <span className="product-save-badge">Save Rs. {savings}</span>
             )}
           </div>
 
           <div className="product-actions-row">
             <div className="qty-counter">
-              <button className="qty-btn" onClick={handleDecrease} title="Decrease quantity">
+              <button
+                className="qty-btn"
+                onClick={handleDecrease}
+                title="Decrease quantity"
+                aria-label="Decrease quantity"
+              >
                 <IconMinus size={11} />
               </button>
               <span className="qty-display">{qty}</span>
-              <button className="qty-btn" onClick={handleIncrease} title="Increase quantity">
+              <button
+                className="qty-btn"
+                onClick={handleIncrease}
+                title="Increase quantity"
+                aria-label="Increase quantity"
+              >
                 <IconPlus size={11} />
               </button>
             </div>
 
-            <button className="btn-add-cart" onClick={handleAdd}>
-              <IconPlus size={14} />
-              <span>{t("btn_add")}</span>
+            <button
+              className={`btn-add-cart ${justAdded ? "added-pop" : ""}`}
+              onClick={handleAdd}
+              aria-label="Add to cart"
+            >
+              {justAdded ? (
+                <>
+                  <IconCheck size={14} />
+                  <span>Added!</span>
+                </>
+              ) : (
+                <>
+                  <IconPlus size={14} />
+                  <span>{t("btn_add")}</span>
+                </>
+              )}
             </button>
           </div>
         </div>

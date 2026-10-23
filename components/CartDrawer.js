@@ -52,6 +52,9 @@ export default function CartDrawer() {
       aria-modal="true"
     >
       <aside className="cart-drawer">
+        {/* Mobile Drag Handle */}
+        <div className="mobile-sheet-handle" />
+
         {/* Drawer Header */}
         <div className="cart-header">
           <div className="cart-title-wrapper">
