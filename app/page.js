@@ -21,6 +21,8 @@ import Toast from "../components/Toast";
 import FloatingWhatsApp from "../components/FloatingWhatsApp";
 import Footer from "../components/Footer";
 import MobileBottomNav from "../components/MobileBottomNav";
+import WhyCleaningMatters from "../components/WhyCleaningMatters";
+import TrustAndTestimonials from "../components/TrustAndTestimonials";
 import { IconSearch } from "../components/Icons";
 
 export default function HomePage() {
@@ -131,6 +133,12 @@ export default function HomePage() {
                     )}
                   </div>
                 </section>
+
+                {/* Educational: Why Proper Cleaning Matters & Quality Comparison */}
+                <WhyCleaningMatters />
+
+                {/* Social Proof: Real Customer Testimonials & Founder Trust Guarantee */}
+                <TrustAndTestimonials />
               </>
             )}
           </main>
