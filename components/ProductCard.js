@@ -2,10 +2,17 @@
 
 import React, { useState } from "react";
 import { useStore } from "../context/StoreContext";
-import { IconEye, IconPlus, IconMinus, IconShieldCheck, IconCheck } from "./Icons";
+import {
+  IconEye,
+  IconPlus,
+  IconMinus,
+  IconShieldCheck,
+  IconCheck,
+  IconWhatsApp
+} from "./Icons";
 
 export default function ProductCard({ product }) {
-  const { addToCart, setActiveProductModal, cart, t } = useStore();
+  const { addToCart, setActiveProductModal, cart, settings, t } = useStore();
   const [qty, setQty] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
 
@@ -14,26 +21,46 @@ export default function ProductCard({ product }) {
 
   const savings = Math.max(0, product.mrp - product.price);
 
-  const handleDecrease = () => {
+  const handleDecrease = (e) => {
+    e.stopPropagation();
     if (qty > 1) setQty(qty - 1);
   };
 
-  const handleIncrease = () => {
+  const handleIncrease = (e) => {
+    e.stopPropagation();
     setQty(qty + 1);
   };
 
-  const handleAdd = () => {
+  const handleAdd = (e) => {
+    e.stopPropagation();
     addToCart(product, qty);
     setJustAdded(true);
     setQty(1);
     setTimeout(() => setJustAdded(false), 1400);
   };
 
+  const handleDirectWhatsApp = (e) => {
+    e.stopPropagation();
+    const rawNumber = settings.whatsappNumber.replace(/\D/g, "");
+    const cleanNumber = rawNumber.startsWith("91") ? rawNumber : "91" + rawNumber;
+
+    const msg = `Hi ${settings.storeName}, I want to order:\n` +
+      `Product: ${product.name}\n` +
+      `Unit: ${product.unit}\n` +
+      `Qty: ${qty}\n` +
+      `Price: Rs. ${product.price * qty}\n\n` +
+      `Please confirm delivery / store pickup readiness. Thank you!`;
+
+    const url = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(msg)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
   const badgeClass = (product.badge || "").toLowerCase().replace(/\s+/g, "-");
 
   return (
     <article className={`product-card ${cartQty > 0 ? "in-cart" : ""}`}>
-      <div className="product-media-wrapper">
+      {/* Product Image & Badges */}
+      <div className="product-media-wrapper" onClick={() => setActiveProductModal(product)} style={{ cursor: "pointer" }}>
         <img src={product.image} alt={product.name} loading="lazy" />
 
         {product.badge && (
@@ -51,21 +78,30 @@ export default function ProductCard({ product }) {
         {/* Quick View Button */}
         <button
           className="product-quick-view-btn"
-          onClick={() => setActiveProductModal(product)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setActiveProductModal(product);
+          }}
           title="Quick view product details"
           aria-label="View details"
         >
-          <IconEye size={16} />
+          <IconEye size={15} />
         </button>
       </div>
 
+      {/* Product Information */}
       <div className="product-body">
         <div className="product-category-row">
           <span className="product-category-tag">{product.categoryName}</span>
           <span className="product-unit-text">{product.unit}</span>
         </div>
 
-        <h3 className="product-title" title={product.name}>
+        <h3
+          className="product-title"
+          title={product.name}
+          onClick={() => setActiveProductModal(product)}
+          style={{ cursor: "pointer" }}
+        >
           {product.name}
         </h3>
 
@@ -76,6 +112,7 @@ export default function ProductCard({ product }) {
           </div>
         )}
 
+        {/* Price Row */}
         <div className="product-footer">
           <div className="product-price-row">
             <span className="product-curr-price">Rs. {product.price}</span>
@@ -87,15 +124,17 @@ export default function ProductCard({ product }) {
             )}
           </div>
 
-          <div className="product-actions-row">
-            <div className="qty-counter">
+          {/* Quantity Counter & Two Actions: 1-Tap WhatsApp + Add to Cart */}
+          <div className="product-actions-cluster">
+            {/* Quantity Stepper */}
+            <div className="qty-counter small">
               <button
                 className="qty-btn"
                 onClick={handleDecrease}
                 title="Decrease quantity"
                 aria-label="Decrease quantity"
               >
-                <IconMinus size={11} />
+                <IconMinus size={10} />
               </button>
               <span className="qty-display">{qty}</span>
               <button
@@ -104,10 +143,22 @@ export default function ProductCard({ product }) {
                 title="Increase quantity"
                 aria-label="Increase quantity"
               >
-                <IconPlus size={11} />
+                <IconPlus size={10} />
               </button>
             </div>
 
+            {/* Direct 1-Tap WhatsApp Action */}
+            <button
+              className="btn-card-wa"
+              onClick={handleDirectWhatsApp}
+              title="Order on WhatsApp"
+              aria-label="Order on WhatsApp"
+            >
+              <IconWhatsApp size={14} />
+              <span>WhatsApp</span>
+            </button>
+
+            {/* Add to Cart with tactile confirmation */}
             <button
               className={`btn-add-cart ${justAdded ? "added-pop" : ""}`}
               onClick={handleAdd}
@@ -115,12 +166,12 @@ export default function ProductCard({ product }) {
             >
               {justAdded ? (
                 <>
-                  <IconCheck size={14} />
+                  <IconCheck size={13} />
                   <span>Added!</span>
                 </>
               ) : (
                 <>
-                  <IconPlus size={14} />
+                  <IconPlus size={13} />
                   <span>{t("btn_add")}</span>
                 </>
               )}

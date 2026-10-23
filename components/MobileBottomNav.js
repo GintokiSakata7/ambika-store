@@ -5,10 +5,10 @@ import { useStore } from "../context/StoreContext";
 import {
   IconGrid,
   IconBuilding,
+  IconNavigation,
   IconHistory,
   IconShoppingBag,
-  IconArrowRight,
-  IconGlobe
+  IconArrowRight
 } from "./Icons";
 
 export default function MobileBottomNav() {
@@ -20,8 +20,6 @@ export default function MobileBottomNav() {
     totalItems,
     subtotal,
     currentRole,
-    lang,
-    setLang,
     t
   } = useStore();
 
@@ -39,15 +37,16 @@ export default function MobileBottomNav() {
               <span className="cart-pill-total">Rs. {subtotal}</span>
             </div>
             <div className="cart-pill-right">
-              <span>View Cart &amp; Book</span>
+              <span>{t("btn_checkout")}</span>
               <IconArrowRight size={15} />
             </div>
           </div>
         </div>
       )}
 
-      {/* Sticky Bottom Navigation Bar for Mobile */}
-      <nav className="mobile-bottom-nav" aria-label="Mobile Navigation">
+      {/* Sticky Bottom Navigation Bar for Mobile (App Interface) */}
+      <nav className="mobile-bottom-nav" aria-label="Mobile App Navigation">
+        {/* Tab 1: Products */}
         <button
           className={`nav-tab-item ${catalogMode === "retail" ? "active" : ""}`}
           onClick={() => {
@@ -59,6 +58,7 @@ export default function MobileBottomNav() {
           <span>{t("nav_products")}</span>
         </button>
 
+        {/* Tab 2: Wholesale */}
         <button
           className={`nav-tab-item ${catalogMode === "wholesale" ? "active" : ""}`}
           onClick={() => {
@@ -67,17 +67,34 @@ export default function MobileBottomNav() {
           }}
         >
           <IconBuilding size={18} />
-          <span>{t("nav_wholesale")}</span>
+          <span>Wholesale</span>
         </button>
 
+        {/* Tab 3: Store Depot & Maps Directions */}
         <button
-          className="nav-tab-item"
-          onClick={() => setIsTrackOrderOpen(true)}
+          className={`nav-tab-item ${catalogMode === "directions" ? "active" : ""}`}
+          onClick={() => {
+            setCatalogMode("directions");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+        >
+          <IconNavigation size={18} />
+          <span>Directions</span>
+        </button>
+
+        {/* Tab 4: Track Order */}
+        <button
+          className={`nav-tab-item ${catalogMode === "track" ? "active" : ""}`}
+          onClick={() => {
+            setCatalogMode("track");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
         >
           <IconHistory size={18} />
           <span>{t("nav_track")}</span>
         </button>
 
+        {/* Tab 5: Cart */}
         <button
           className="nav-tab-item cart-tab"
           onClick={() => setIsCartOpen(true)}

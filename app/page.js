@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useStore } from "../context/StoreContext";
 
 import Header from "../components/Header";
@@ -9,7 +9,10 @@ import FeatureStrip from "../components/FeatureStrip";
 import ComboSection from "../components/ComboSection";
 import CategoryNav from "../components/CategoryNav";
 import ProductCard from "../components/ProductCard";
+import ProductSkeletonCard from "../components/ProductSkeletonCard";
 import WholesaleSection from "../components/WholesaleSection";
+import StoreDirectionsView from "../components/StoreDirectionsView";
+import TrackOrderPage from "../components/TrackOrderPage";
 import CartDrawer from "../components/CartDrawer";
 import CheckoutModal from "../components/CheckoutModal";
 import OrderSuccessModal from "../components/OrderSuccessModal";
@@ -30,6 +33,7 @@ export default function HomePage() {
 
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // Filter products by category and search
   const filteredProducts = useMemo(() => {
@@ -47,6 +51,15 @@ export default function HomePage() {
     });
   }, [products, activeCategory, searchQuery]);
 
+  // Smooth skeleton transition when switching categories
+  const handleCategoryChange = (cat) => {
+    setLoading(true);
+    setActiveCategory(cat);
+    setTimeout(() => {
+      setLoading(false);
+    }, 220);
+  };
+
   return (
     <>
       {/* Conditionally Render Based on Current Role */}
@@ -54,20 +67,27 @@ export default function HomePage() {
         /* Dedicated Store Admin Dashboard (Edit products, Add/Remove Categories, Orders) */
         <AdminDashboard />
       ) : (
-        /* Clean Customer Storefront (Only browse catalog, view details, and book via WhatsApp) */
+        /* Clean Customer Storefront (Full-page app-like navigation) */
         <>
           <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
-          <main>
-            {/* Show Wholesale Section if Wholesale Mode is active */}
+          <main className="main-content-flow">
+            {/* View 1: Wholesale Section (Full Page) */}
             {catalogMode === "wholesale" ? (
               <WholesaleSection />
+            ) : catalogMode === "directions" ? (
+              /* View 2: Store & Google Maps Directions (Full Page) */
+              <StoreDirectionsView />
+            ) : catalogMode === "track" ? (
+              /* View 3: Live Order Ticket Tracking (Full Page) */
+              <TrackOrderPage />
             ) : (
+              /* View 4: Retail Products & Catalog */
               <>
-                {/* Hero Section */}
+                {/* Non-intrusive Suggestion Hero (Sleek on mobile, refined on desktop) */}
                 <Hero />
 
-                {/* Value Proposition Strip */}
+                {/* Value Proposition Strip (Desktop & tablet) */}
                 <FeatureStrip />
 
                 {/* Curated Combos */}
@@ -79,10 +99,10 @@ export default function HomePage() {
                     <div className="section-head-wrapper">
                       <div className="section-head">
                         <h2>{t("nav_products")}</h2>
-                        <p>Direct supply white phenyl, toilet acids, mothballs, bleaching powders, brooms, mops & scrubbers.</p>
+                        <p>Direct supply white phenyl, toilet acids, mothballs, bleaching powders, brooms, mops &amp; scrubbers.</p>
                       </div>
 
-                      <div style={{ fontSize: "0.86rem", color: "#64748b", fontWeight: "600" }}>
+                      <div style={{ fontSize: "0.84rem", color: "#64748b", fontWeight: "600" }}>
                         Showing {filteredProducts.length} items
                       </div>
                     </div>
@@ -90,11 +110,17 @@ export default function HomePage() {
                     {/* Dynamic Category Filter Chips */}
                     <CategoryNav
                       activeCategory={activeCategory}
-                      onSelectCategory={setActiveCategory}
+                      onSelectCategory={handleCategoryChange}
                     />
 
-                    {/* Product Grid - Customer View (Only View & Book) */}
-                    {filteredProducts.length === 0 ? (
+                    {/* Product Grid with Skeleton Loading Shimmer & Micro-Animations */}
+                    {loading ? (
+                      <div className="products-grid">
+                        {[1, 2, 3, 4, 5, 6].map((idx) => (
+                          <ProductSkeletonCard key={idx} />
+                        ))}
+                      </div>
+                    ) : filteredProducts.length === 0 ? (
                       <div
                         style={{
                           textAlign: "center",
@@ -118,11 +144,11 @@ export default function HomePage() {
                             setActiveCategory("all");
                           }}
                         >
-                          Clear Filters & View All
+                          Clear Filters &amp; View All
                         </button>
                       </div>
                     ) : (
-                      <div className="products-grid">
+                      <div className="products-grid fade-in-grid">
                         {filteredProducts.map((prod) => (
                           <ProductCard
                             key={prod.id}
@@ -143,7 +169,7 @@ export default function HomePage() {
             )}
           </main>
 
-          {/* Cart Drawer */}
+          {/* Cart Drawer Bottom-Sheet */}
           <CartDrawer />
 
           {/* Checkout & Delivery Address Modal */}
@@ -152,7 +178,7 @@ export default function HomePage() {
           {/* Order Ticket & Success Modal */}
           <OrderSuccessModal />
 
-          {/* Track Order Lookup Modal */}
+          {/* Track Order Lookup Modal (for modal triggers) */}
           <TrackOrderModal />
 
           {/* Quick View Details Modal */}

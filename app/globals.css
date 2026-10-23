@@ -2791,5 +2791,375 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* ==========================================================================
+   Full-Screen App Interface & Responsive Enhancements
+   ========================================================================== */
+
+/* Desktop / Mobile Visibility Utilities */
+.desktop-only-bar,
+.desktop-only-search,
+.desktop-only-actions,
+.desktop-hero-banner {
+  display: flex;
+}
+
+.mobile-header-actions,
+.mobile-search-bar-row,
+.mobile-suggestion-card {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .desktop-only-bar,
+  .desktop-only-search,
+  .desktop-only-actions,
+  .desktop-hero-banner {
+    display: none !important;
+  }
+
+  .mobile-header-actions {
+    display: flex !important;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .mobile-search-bar-row {
+    display: block !important;
+    padding: 6px 14px 12px;
+  }
+
+  .mobile-suggestion-card {
+    display: block !important;
+  }
+
+  /* Make Main Header clean & compact on mobile */
+  .main-header {
+    padding: 10px 0 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  .nav-container {
+    padding: 0 14px 8px;
+  }
+
+  .brand-logo-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .brand-text h1 {
+    font-size: 1.05rem;
+    letter-spacing: -0.02em;
+  }
+
+  .brand-subtitle {
+    font-size: 0.68rem;
+  }
+}
+
+/* Mobile Header Action Controls */
+.mobile-header-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 6px 8px;
+  color: #0f172a;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mobile-header-icon-btn:hover,
+.mobile-header-icon-btn.active {
+  background-color: #f0fdfa;
+  border-color: #0f766e;
+  color: #0f766e;
+}
+
+.mobile-lang-chip {
+  display: inline-flex;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.mobile-lang-chip button {
+  background: none;
+  border: none;
+  padding: 5px 7px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.mobile-lang-chip button.active {
+  background-color: #0f766e;
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   Suggestion Hero Section (Clean, Non-Intrusive, Mobile First)
+   ========================================================================== */
+.suggestion-hero-section {
+  padding: 10px 0 6px;
+}
+
+.mobile-suggestion-card {
+  background: #f0fdfa;
+  border: 1px solid #ccfbf1;
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 1px 3px rgba(15, 118, 110, 0.06);
+}
+
+.suggestion-main-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.suggestion-icon-wrap {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid #ccfbf1;
+}
+
+.suggestion-text-wrap {
+  flex: 1;
+  cursor: pointer;
+}
+
+.suggestion-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.suggestion-pill-tag {
+  background-color: #0f766e;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.suggestion-tap-hint {
+  font-size: 0.68rem;
+  color: #0f766e;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.suggestion-title {
+  font-size: 0.78rem;
+  color: #134e4a;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.suggestion-dismiss-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.suggestion-dismiss-btn:hover {
+  color: #0f172a;
+}
+
+.suggestion-expanded-content {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #99f6e4;
+}
+
+.suggestion-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.suggestion-chip {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.suggestion-chip.clickable {
+  cursor: pointer;
+  border-color: #99f6e4;
+}
+
+.suggestion-chip.clickable:hover {
+  background-color: #f0fdfa;
+}
+
+/* Desktop Polished Banner */
+.desktop-hero-banner {
+  background: linear-gradient(135deg, #f8fafc 0%, #f0fdfa 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.desktop-hero-left h2 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #09090b;
+  margin: 6px 0;
+}
+
+.desktop-hero-left p {
+  font-size: 0.88rem;
+  color: #64748b;
+  margin: 0 0 14px;
+}
+
+.desktop-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #0f766e;
+  background-color: #ffffff;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  border: 1px solid #ccfbf1;
+}
+
+.desktop-hero-pills {
+  display: flex;
+  gap: 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.desktop-hero-pills span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ==========================================================================
+   Product Card Actions: 1-Tap WhatsApp + Add Cart
+   ========================================================================== */
+.product-actions-cluster {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.btn-card-wa {
+  flex: 1;
+  background-color: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 7px 8px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+  white-space: nowrap;
+}
+
+.btn-card-wa:hover {
+  background-color: #15803d;
+}
+
+.btn-card-wa:active {
+  transform: scale(0.97);
+}
+
+/* ==========================================================================
+   Skeleton Shimmer & Spin Loading Animations
+   ========================================================================== */
+.skeleton-card {
+  pointer-events: none;
+}
+
+.skeleton-box {
+  background-color: #f1f5f9;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-shimmer {
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.65) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmerMove 1.3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes shimmerMove {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.fade-in-grid {
+  animation: gridFadeIn 0.22s ease-out;
+}
+
+@keyframes gridFadeIn {
+  from { opacity: 0.6; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.icon-spin {
+  animation: spinSmooth 0.9s linear infinite;
+}
+
+@keyframes spinSmooth {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+
 
 

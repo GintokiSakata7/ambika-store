@@ -36,6 +36,7 @@ export function StoreProvider({ children }) {
   // Modals & Drawers state
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [checkoutFulfillmentType, setCheckoutFulfillmentType] = useState("delivery"); // "delivery" | "pickup"
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isTrackOrderOpen, setIsTrackOrderOpen] = useState(false);
   const [isOrderSuccessOpen, setIsOrderSuccessOpen] = useState(false);
@@ -576,6 +577,8 @@ export function StoreProvider({ children }) {
         setIsCartOpen,
         isCheckoutOpen,
         setIsCheckoutOpen,
+        checkoutFulfillmentType,
+        setCheckoutFulfillmentType,
         isAdminOpen,
         setIsAdminOpen,
         isTrackOrderOpen,

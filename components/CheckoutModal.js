@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useStore } from "../context/StoreContext";
 import {
   IconTruck,
@@ -9,7 +9,8 @@ import {
   IconX,
   IconCheck,
   IconMapPin,
-  IconNavigation
+  IconNavigation,
+  IconPlus
 } from "./Icons";
 
 export default function CheckoutModal() {
@@ -21,14 +22,31 @@ export default function CheckoutModal() {
     remainingForDelivery,
     isCheckoutOpen,
     setIsCheckoutOpen,
+    checkoutFulfillmentType,
+    setCheckoutFulfillmentType,
     createOrder,
     generateWhatsAppUrl,
     showToast,
+    addToCart,
+    products,
     settings,
     t
   } = useStore();
 
-  const [orderType, setOrderType] = useState(isDeliveryEligible ? "delivery" : "pickup");
+  const [orderType, setOrderType] = useState(
+    checkoutFulfillmentType || (isDeliveryEligible ? "delivery" : "pickup")
+  );
+
+  // Keep orderType in exact sync whenever modal opens or fulfillment mode changes
+  useEffect(() => {
+    if (isCheckoutOpen) {
+      if (checkoutFulfillmentType) {
+        setOrderType(checkoutFulfillmentType);
+      } else {
+        setOrderType(isDeliveryEligible ? "delivery" : "pickup");
+      }
+    }
+  }, [isCheckoutOpen, checkoutFulfillmentType, isDeliveryEligible]);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -53,6 +71,11 @@ export default function CheckoutModal() {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
+
+  // Low-cost quick add candidates to bridge Rs. 500 threshold directly in checkout
+  const quickAddCandidates = (products || [])
+    .filter((p) => p.price <= 110 && !cart.some((c) => c.id === p.id))
+    .slice(0, 3);
 
   // GPS Auto-Fill (Session only)
   const handleGpsAutoFill = () => {
@@ -146,10 +169,9 @@ export default function CheckoutModal() {
 
       showToast(`Order Ticket #${newOrder.orderId} Created!`, "success");
 
-      setTimeout(() => {
-        setSubmitting(false);
-        window.open(waUrl, "_blank", "noopener,noreferrer");
-      }, 500);
+      // Open WhatsApp directly
+      window.open(waUrl, "_blank", "noopener,noreferrer");
+      setSubmitting(false);
     } catch (err) {
       console.error(err);
       setSubmitting(false);
@@ -195,12 +217,8 @@ export default function CheckoutModal() {
             <label
               className={`type-radio-card ${orderType === "delivery" ? "active" : ""}`}
               onClick={() => {
-                if (isDeliveryEligible) {
-                  setOrderType("delivery");
-                } else {
-                  showToast(t("delivery_min_alert", { diff: remainingForDelivery }), "info");
-                  setOrderType("delivery");
-                }
+                setOrderType("delivery");
+                setCheckoutFulfillmentType("delivery");
               }}
             >
               <input
@@ -208,7 +226,10 @@ export default function CheckoutModal() {
                 name="orderType"
                 value="delivery"
                 checked={orderType === "delivery"}
-                onChange={() => setOrderType("delivery")}
+                onChange={() => {
+                  setOrderType("delivery");
+                  setCheckoutFulfillmentType("delivery");
+                }}
               />
               <div className="type-card-info">
                 <h5>
@@ -223,14 +244,20 @@ export default function CheckoutModal() {
 
             <label
               className={`type-radio-card ${orderType === "pickup" ? "active" : ""}`}
-              onClick={() => setOrderType("pickup")}
+              onClick={() => {
+                setOrderType("pickup");
+                setCheckoutFulfillmentType("pickup");
+              }}
             >
               <input
                 type="radio"
                 name="orderType"
                 value="pickup"
                 checked={orderType === "pickup"}
-                onChange={() => setOrderType("pickup")}
+                onChange={() => {
+                  setOrderType("pickup");
+                  setCheckoutFulfillmentType("pickup");
+                }}
               />
               <div className="type-card-info">
                 <h5>
@@ -242,11 +269,79 @@ export default function CheckoutModal() {
             </label>
           </div>
 
-          {/* Alert if Delivery is selected but subtotal < 500 */}
+          {/* Alert if Delivery is selected but subtotal < 500 with Quick Solutions */}
           {orderType === "delivery" && !isDeliveryEligible && (
-            <div className="checkout-threshold-warning">
-              <div>
-                <strong>Minimum Order Notice:</strong> Subtotal is <strong>Rs. {subtotal}</strong>. Home delivery is available for orders above <strong>Rs. {deliveryMinimum}</strong> (Add Rs. {remainingForDelivery} more). Or select <strong>Store Self-Pickup</strong> to proceed now.
+            <div
+              className="checkout-threshold-warning"
+              style={{
+                borderRadius: "8px",
+                padding: "12px 14px",
+                marginBottom: "16px",
+                fontSize: "0.82rem"
+              }}
+            >
+              <div style={{ marginBottom: "10px", lineHeight: "1.4" }}>
+                <strong>Minimum Order Notice:</strong> Subtotal is <strong>Rs. {subtotal}</strong>. Home delivery is available for orders of <strong>Rs. {deliveryMinimum}</strong> and above (Add Rs. {remainingForDelivery} more). Or switch to <strong>Store Self-Pickup</strong> to book immediately.
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOrderType("pickup");
+                    setCheckoutFulfillmentType("pickup");
+                  }}
+                  style={{
+                    background: "#0f766e",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "6px",
+                    padding: "8px 12px",
+                    fontSize: "0.8rem",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "6px"
+                  }}
+                >
+                  <IconStore size={15} />
+                  <span>{t("switch_to_pickup")} (100% Free)</span>
+                </button>
+
+                {quickAddCandidates.length > 0 && (
+                  <div style={{ marginTop: "4px" }}>
+                    <div style={{ fontSize: "0.74rem", fontWeight: 600, color: "#92400e", marginBottom: "6px" }}>
+                      {t("quick_add_threshold")}
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                      {quickAddCandidates.map((cand) => (
+                        <button
+                          key={cand.id}
+                          type="button"
+                          onClick={() => addToCart(cand, 1)}
+                          style={{
+                            background: "#ffffff",
+                            border: "1px solid #f59e0b",
+                            borderRadius: "6px",
+                            padding: "4px 8px",
+                            fontSize: "0.74rem",
+                            fontWeight: 600,
+                            color: "#b45309",
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px"
+                          }}
+                        >
+                          <IconPlus size={11} />
+                          <span>+ {cand.name.split(" ")[0]} (Rs. {cand.price})</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
