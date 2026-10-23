@@ -48,3 +48,171 @@
 .store-pickup-info-card p{margin:0;font-size:12px;color:#3b5744;line-height:1.5}
 .store-pickup-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
 .store-pickup-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:6px;background:#e1f2e7;color:#164f31;font-size:11px;font-weight:600}
+
+/* Product Details Mobile & Tablet Responsiveness */
+@media (max-width: 900px) {
+  .product-detail-layout {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+  .detail-gallery {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  .detail-main-visual,
+  .detail-main-visual .product-visual {
+    min-height: 320px !important;
+    height: 320px !important;
+  }
+  .detail-main-visual .product-visual:before {
+    width: 190px !important;
+    height: 190px !important;
+  }
+  .detail-info-columns {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+    padding: 20px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .product-detail-page {
+    padding-top: 14px !important;
+    padding-bottom: 36px !important;
+  }
+  .product-detail-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    width: 100% !important;
+  }
+  .detail-gallery {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .detail-main-visual,
+  .detail-main-visual .product-visual {
+    min-height: 220px !important;
+    height: 230px !important;
+    max-height: 240px !important;
+    border-radius: 12px !important;
+  }
+  .detail-main-visual .visual-object {
+    width: 55% !important;
+    height: 70% !important;
+    max-height: 160px !important;
+  }
+  .detail-main-visual .product-visual:before {
+    width: 120px !important;
+    height: 120px !important;
+    box-shadow: 0 0 0 12px #ffffff30, 0 0 0 24px #ffffff18 !important;
+  }
+  .detail-gallery-caption {
+    margin-top: 6px !important;
+    font-size: 8px !important;
+    justify-content: center !important;
+  }
+  .detail-product-info {
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  .detail-product-info h1 {
+    font-size: 20px !important;
+    margin: 6px 0 8px !important;
+    line-height: 1.25 !important;
+    letter-spacing: -0.03em !important;
+  }
+  .detail-rating {
+    margin-bottom: 12px !important;
+    font-size: 11px !important;
+  }
+  .detail-price-wrap {
+    gap: 8px !important;
+  }
+  .detail-price-wrap > strong {
+    font-size: 23px !important;
+  }
+  .detail-price-wrap del {
+    font-size: 12px !important;
+  }
+  .detail-tax-note {
+    margin: 4px 0 12px !important;
+    font-size: 9px !important;
+    line-height: 1.5 !important;
+  }
+  .detail-stock-row {
+    margin-bottom: 12px !important;
+    padding: 8px 10px !important;
+    font-size: 9px !important;
+  }
+  .detail-description {
+    font-size: 10px !important;
+    line-height: 1.65 !important;
+  }
+  .detail-facts {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+    margin: 14px 0 !important;
+  }
+  .detail-facts > div {
+    padding: 8px 10px !important;
+  }
+  .detail-facts strong {
+    font-size: 10px !important;
+  }
+  .detail-facts small {
+    font-size: 8px !important;
+  }
+  .detail-buy-box {
+    grid-template-columns: 100px minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+  .quantity-stepper {
+    width: 100px !important;
+    min-height: 38px !important;
+    height: 38px !important;
+  }
+  .detail-add-button {
+    min-height: 38px !important;
+    font-size: 11px !important;
+  }
+  .detail-buy-box > .button-outline {
+    min-height: 38px !important;
+    font-size: 11px !important;
+    margin-top: 4px !important;
+  }
+  .detail-policy-note {
+    margin-top: 12px !important;
+    padding: 10px !important;
+    font-size: 8px !important;
+  }
+  .detail-description-panel {
+    margin-top: 20px !important;
+    border-radius: 10px !important;
+  }
+  .detail-panel-tabs {
+    padding: 10px 14px !important;
+    font-size: 10px !important;
+    gap: 16px !important;
+  }
+  .detail-info-columns {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    padding: 14px !important;
+  }
+  .detail-info-columns h2 {
+    font-size: 12px !important;
+    margin-bottom: 6px !important;
+  }
+  .detail-info-columns p,
+  .detail-info-columns li {
+    font-size: 9px !important;
+    line-height: 1.6 !important;
+  }
+  .related-products {
+    padding-top: 24px !important;
+  }
+}
+
