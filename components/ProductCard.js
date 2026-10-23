@@ -46,15 +46,6 @@ export default function ProductCard({ product, onEditClick }) {
             <circle cx="12" cy="12" r="3" />
           </svg>
         </button>
-
-        {/* Admin Quick Edit Button */}
-        <button
-          className="btn-card-admin-edit"
-          onClick={() => onEditClick(product)}
-          title="Demo: Quick Edit Price / Details"
-        >
-          <span>✏️ Edit</span>
-        </button>
       </div>
 
       <div className="product-body">

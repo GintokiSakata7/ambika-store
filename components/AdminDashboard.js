@@ -6,10 +6,16 @@ import { useStore } from "../context/StoreContext";
 export default function AdminDashboard() {
   const {
     products,
+    categories,
+    addCategory,
+    removeCategory,
+    updateCategory,
     settings,
     orders,
     currentRole,
     setCurrentRole,
+    currentUser,
+    logout,
     updateProduct,
     addProduct,
     deleteProduct,
@@ -20,7 +26,7 @@ export default function AdminDashboard() {
     showToast
   } = useStore();
 
-  const [activeTab, setActiveTab] = useState("products"); // "products" | "orders" | "settings" | "add"
+  const [activeTab, setActiveTab] = useState("products"); // "products" | "add" | "categories" | "orders" | "settings"
   const [searchFilter, setSearchFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
 
@@ -29,6 +35,10 @@ export default function AdminDashboard() {
 
   // Full Edit Modal State
   const [editingProduct, setEditingProduct] = useState(null);
+
+  // New Category Form State
+  const [newCatLabel, setNewCatLabel] = useState("");
+  const [newCatIcon, setNewCatIcon] = useState("🧴");
 
   // New Product Form State
   const [newProduct, setNewProduct] = useState({
@@ -63,7 +73,7 @@ export default function AdminDashboard() {
     const matchSearch =
       !q ||
       p.name.toLowerCase().includes(q) ||
-      p.categoryName.toLowerCase().includes(q);
+      (p.categoryName && p.categoryName.toLowerCase().includes(q));
     return matchCat && matchSearch;
   });
 
@@ -85,7 +95,6 @@ export default function AdminDashboard() {
     const changes = inlineEdits[productId];
     if (!changes) return;
     updateProduct(productId, changes);
-    // Clear inline edit state for this item
     setInlineEdits((prev) => {
       const next = { ...prev };
       delete next[productId];
@@ -112,8 +121,8 @@ export default function AdminDashboard() {
       price: 90,
       mrp: 120,
       unit: "1 Litre Bottle",
-      category: "phenyl",
-      categoryName: "Phenol & Floor Cleaners",
+      category: categories[1]?.id || "phenyl",
+      categoryName: categories[1]?.label || "Phenol & Floor Cleaners",
       badge: "New Arrival",
       potency: "99.9% Germ Protection",
       stock: "In Stock",
@@ -122,6 +131,19 @@ export default function AdminDashboard() {
       usage: "Dilute in water as per directions."
     });
     setActiveTab("products");
+  };
+
+  const handleCreateCategory = (e) => {
+    e.preventDefault();
+    if (!newCatLabel.trim()) return;
+    const success = addCategory({
+      label: newCatLabel,
+      icon: newCatIcon
+    });
+    if (success) {
+      setNewCatLabel("");
+      setNewCatIcon("🧴");
+    }
   };
 
   const handleSaveStoreSettings = (e) => {
@@ -138,11 +160,11 @@ export default function AdminDashboard() {
             <span className="admin-shield-icon">🛡️</span>
             <div>
               <h2>{settings.storeName} — Admin Dashboard</h2>
-              <p>Demo Store Owner & Catalog Control Center • {settings.companyName}</p>
+              <p>Store Owner Control Center • {currentUser?.email || "admin@majinstudios.com"}</p>
             </div>
           </div>
 
-          <div className="admin-nav-actions">
+          <div className="admin-nav-actions" style={{ display: "flex", gap: "10px", alignItems: "center" }}>
             <button
               onClick={() => setCurrentRole("customer")}
               className="btn-switch-customer"
@@ -152,7 +174,15 @@ export default function AdminDashboard() {
                 <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
                 <circle cx="12" cy="12" r="3" />
               </svg>
-              <span>Switch to Customer Storefront</span>
+              <span>View Customer Store</span>
+            </button>
+            <button
+              onClick={logout}
+              className="btn-outline"
+              style={{ color: "#fff", borderColor: "rgba(255,255,255,0.3)", padding: "8px 14px" }}
+              title="Log out of Admin session"
+            >
+              Sign Out
             </button>
           </div>
         </div>
@@ -161,13 +191,23 @@ export default function AdminDashboard() {
       <main className="container" style={{ padding: "30px 20px 80px" }}>
         {/* KPI Summary Cards Strip */}
         <section className="admin-kpi-grid">
-          <div className="admin-kpi-card">
+          <div className="admin-kpi-card" onClick={() => setActiveTab("products")} style={{ cursor: "pointer" }}>
             <div className="kpi-icon-box" style={{ background: "#e0f2fe", color: "#0284c7" }}>
               📦
             </div>
             <div>
               <div className="kpi-val">{products.length}</div>
               <div className="kpi-label">Active Products in Catalog</div>
+            </div>
+          </div>
+
+          <div className="admin-kpi-card" onClick={() => setActiveTab("categories")} style={{ cursor: "pointer" }}>
+            <div className="kpi-icon-box" style={{ background: "#fef3c7", color: "#d97706" }}>
+              🏷️
+            </div>
+            <div>
+              <div className="kpi-val">{categories.filter(c => c.id !== "all").length}</div>
+              <div className="kpi-label">Product Categories</div>
             </div>
           </div>
 
@@ -181,23 +221,13 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="admin-kpi-card">
-            <div className="kpi-icon-box" style={{ background: "#f0fdf4", color: "#25d366" }}>
-              💬
-            </div>
-            <div>
-              <div className="kpi-val" style={{ fontSize: "1.1rem" }}>{settings.whatsappNumber}</div>
-              <div className="kpi-label">WhatsApp Order Desk</div>
-            </div>
-          </div>
-
-          <div className="admin-kpi-card">
+          <div className="admin-kpi-card" onClick={() => setActiveTab("orders")} style={{ cursor: "pointer" }}>
             <div className="kpi-icon-box" style={{ background: "#eef2ff", color: "#6366f1" }}>
               📑
             </div>
             <div>
               <div className="kpi-val">{orders.length}</div>
-              <div className="kpi-label">Demo Orders Logged</div>
+              <div className="kpi-label">Incoming Orders</div>
             </div>
           </div>
         </section>
@@ -208,25 +238,31 @@ export default function AdminDashboard() {
             className={`admin-main-tab-btn ${activeTab === "products" ? "active" : ""}`}
             onClick={() => setActiveTab("products")}
           >
-            📦 Product Catalog & Pricing ({products.length})
+            📦 Products Catalog & Pricing ({products.length})
           </button>
           <button
             className={`admin-main-tab-btn ${activeTab === "add" ? "active" : ""}`}
             onClick={() => setActiveTab("add")}
           >
-            ➕ Add New Product
+            ➕ Add Product
+          </button>
+          <button
+            className={`admin-main-tab-btn ${activeTab === "categories" ? "active" : ""}`}
+            onClick={() => setActiveTab("categories")}
+          >
+            🏷️ Category Manager ({categories.filter(c => c.id !== "all").length})
           </button>
           <button
             className={`admin-main-tab-btn ${activeTab === "orders" ? "active" : ""}`}
             onClick={() => setActiveTab("orders")}
           >
-            📋 Incoming Orders Log ({orders.length})
+            📋 Orders Log ({orders.length})
           </button>
           <button
             className={`admin-main-tab-btn ${activeTab === "settings" ? "active" : ""}`}
             onClick={() => setActiveTab("settings")}
           >
-            ⚙️ Store & Delivery Settings
+            ⚙️ Store Settings
           </button>
         </div>
 
@@ -245,27 +281,34 @@ export default function AdminDashboard() {
                 />
                 <select
                   className="form-control"
-                  style={{ maxWidth: "220px" }}
+                  style={{ maxWidth: "240px" }}
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
                 >
-                  <option value="all">All Categories</option>
-                  <option value="phenyl">Phenol & Floor Cleaners</option>
-                  <option value="acids">Acids & Toilet Cleaners</option>
-                  <option value="naphthalene">Naphthalene Balls</option>
-                  <option value="powders">Bleach & Powders</option>
-                  <option value="brooms">Brooms, Mops & Wipers</option>
-                  <option value="accessories">Scrubbers & Buckets</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.icon ? `${c.icon} ` : ""}{c.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 
-              <button
-                className="btn-primary"
-                onClick={() => setActiveTab("add")}
-                style={{ whiteSpace: "nowrap" }}
-              >
-                ➕ Add New Product
-              </button>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  className="btn-outline"
+                  onClick={() => setActiveTab("categories")}
+                  style={{ whiteSpace: "nowrap" }}
+                >
+                  🏷️ Manage Categories
+                </button>
+                <button
+                  className="btn-primary"
+                  onClick={() => setActiveTab("add")}
+                  style={{ whiteSpace: "nowrap" }}
+                >
+                  ➕ Add New Product
+                </button>
+              </div>
             </div>
 
             {/* Products Table */}
@@ -299,47 +342,58 @@ export default function AdminDashboard() {
                               style={{ width: "42px", height: "42px", borderRadius: "6px", objectFit: "cover", border: "1px solid #e2e8f0" }}
                             />
                             <div>
-                              <strong style={{ fontSize: "0.88rem", color: "#0f172a", display: "block" }}>{p.name}</strong>
-                              <span style={{ fontSize: "0.72rem", color: "#64748b" }}>{p.potency || "Standard"}</span>
+                              <div style={{ fontWeight: "700", color: "#0f172a" }}>{p.name}</div>
+                              {p.badge && (
+                                <span className="admin-table-badge">{p.badge}</span>
+                              )}
                             </div>
                           </div>
                         </td>
 
                         <td>
-                          <div style={{ fontSize: "0.82rem", color: "#334155" }}>{p.categoryName}</div>
-                          <span style={{ fontSize: "0.74rem", background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px" }}>
-                            {p.unit}
-                          </span>
+                          <div style={{ fontWeight: "600", color: "#0f766e", fontSize: "0.84rem" }}>
+                            {p.categoryName}
+                          </div>
+                          <div style={{ fontSize: "0.78rem", color: "#64748b" }}>{p.unit}</div>
                         </td>
 
+                        {/* Inline Editable Price */}
                         <td>
-                          <input
-                            type="number"
-                            className="admin-inline-input"
-                            value={priceVal}
-                            onChange={(e) => handleInlineChange(p.id, "price", Number(e.target.value))}
-                            style={{ width: "80px" }}
-                          />
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            <span style={{ fontSize: "0.85rem", color: "#64748b" }}>₹</span>
+                            <input
+                              type="number"
+                              className={`admin-inline-input ${hasChanges ? "modified" : ""}`}
+                              value={priceVal}
+                              onChange={(e) => handleInlineChange(p.id, "price", Number(e.target.value))}
+                              style={{ width: "75px" }}
+                            />
+                          </div>
                         </td>
 
+                        {/* Inline Editable MRP */}
                         <td>
-                          <input
-                            type="number"
-                            className="admin-inline-input"
-                            value={mrpVal}
-                            onChange={(e) => handleInlineChange(p.id, "mrp", Number(e.target.value))}
-                            style={{ width: "80px" }}
-                          />
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            <span style={{ fontSize: "0.85rem", color: "#64748b" }}>₹</span>
+                            <input
+                              type="number"
+                              className={`admin-inline-input ${hasChanges ? "modified" : ""}`}
+                              value={mrpVal}
+                              onChange={(e) => handleInlineChange(p.id, "mrp", Number(e.target.value))}
+                              style={{ width: "75px" }}
+                            />
+                          </div>
                         </td>
 
+                        {/* Inline Stock Selector */}
                         <td>
                           <select
-                            className="admin-inline-input"
+                            className={`admin-inline-input ${hasChanges ? "modified" : ""}`}
                             value={stockVal}
                             onChange={(e) => handleInlineChange(p.id, "stock", e.target.value)}
                             style={{
                               fontWeight: "600",
-                              color: stockVal === "In Stock" ? "#16a34a" : stockVal === "Low Stock" ? "#d97706" : "#dc2626"
+                              color: stockVal === "In Stock" ? "#15803d" : stockVal === "Low Stock" ? "#b45309" : "#dc2626"
                             }}
                           >
                             <option value="In Stock">In Stock</option>
@@ -348,29 +402,33 @@ export default function AdminDashboard() {
                           </select>
                         </td>
 
+                        {/* Row Actions */}
                         <td>
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                             {hasChanges && (
                               <button
                                 className="btn-admin-save"
                                 onClick={() => handleSaveInline(p.id)}
-                                title="Save inline edits"
+                                title="Save price/stock changes"
                               >
-                                ✓ Save
+                                💾 Save
                               </button>
                             )}
+
                             <button
-                              className="btn-outline"
-                              style={{ padding: "5px 10px", fontSize: "0.78rem" }}
+                              className="btn-admin-edit"
                               onClick={() => setEditingProduct({ ...p })}
-                              title="Full edit modal"
+                              title="Full edit product"
                             >
                               ✏️ Edit
                             </button>
+
                             <button
                               className="btn-admin-delete"
                               onClick={() => {
-                                if (confirm(`Delete product "${p.name}"?`)) deleteProduct(p.id);
+                                if (confirm(`Delete "${p.name}" from catalog?`)) {
+                                  deleteProduct(p.id);
+                                }
                               }}
                               title="Delete product"
                             >
@@ -384,6 +442,12 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             </div>
+
+            {filteredProducts.length === 0 && (
+              <div style={{ textAlign: "center", padding: "40px 20px", color: "#64748b" }}>
+                No products found matching &quot;{searchFilter}&quot;.
+              </div>
+            )}
           </section>
         )}
 
@@ -391,8 +455,11 @@ export default function AdminDashboard() {
         {activeTab === "add" && (
           <section className="admin-content-panel">
             <h3 style={{ fontSize: "1.2rem", color: "#0f172a", marginBottom: "16px" }}>
-              Add New House Cleaning Item to Catalog
+              Add New House Cleaning Product
             </h3>
+            <p style={{ fontSize: "0.86rem", color: "#64748b", marginBottom: "20px" }}>
+              Items published here immediately show up in the customer storefront and cart system.
+            </p>
 
             <form onSubmit={handleCreateProduct} className="form-grid">
               <div className="form-group full-width">
@@ -400,7 +467,7 @@ export default function AdminDashboard() {
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="e.g. Ultra Pine Floor Disinfectant 1L"
+                  placeholder="e.g. Pine Disinfectant Phenyl 2L"
                   value={newProduct.name}
                   onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
                   required
@@ -447,27 +514,32 @@ export default function AdminDashboard() {
                   className="form-control"
                   value={newProduct.category}
                   onChange={(e) => {
-                    const catMap = {
-                      phenyl: "Phenol & Floor Cleaners",
-                      acids: "Acids & Toilet Cleaners",
-                      naphthalene: "Pest & Odor Control",
-                      powders: "Bleach & Cleaning Powders",
-                      brooms: "Brooms, Mops & Wipers",
-                      accessories: "Scrubbers, Buckets & Tools"
-                    };
+                    const sel = categories.find((c) => c.id === e.target.value);
                     setNewProduct({
                       ...newProduct,
                       category: e.target.value,
-                      categoryName: catMap[e.target.value] || "General Supplies"
+                      categoryName: sel ? sel.label : "Cleaning Supplies"
                     });
                   }}
                 >
-                  <option value="phenyl">Phenol & Floor Cleaners</option>
-                  <option value="acids">Acids & Toilet Cleaners</option>
-                  <option value="naphthalene">Naphthalene Balls</option>
-                  <option value="powders">Bleach & Powders</option>
-                  <option value="brooms">Brooms, Mops & Wipers</option>
-                  <option value="accessories">Scrubbers & Buckets</option>
+                  {categories.filter((c) => c.id !== "all").map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.icon ? `${c.icon} ` : ""}{c.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Stock Status</label>
+                <select
+                  className="form-control"
+                  value={newProduct.stock}
+                  onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
+                >
+                  <option value="In Stock">In Stock</option>
+                  <option value="Low Stock">Low Stock</option>
+                  <option value="Out of Stock">Out of Stock</option>
                 </select>
               </div>
 
@@ -524,7 +596,137 @@ export default function AdminDashboard() {
           </section>
         )}
 
-        {/* TAB 3: INCOMING DEMO ORDERS LOG */}
+        {/* TAB 3: CATEGORY MANAGER (ADD OR REMOVE CATEGORIES) */}
+        {activeTab === "categories" && (
+          <section className="admin-content-panel">
+            <div style={{ marginBottom: "20px" }}>
+              <h3 style={{ fontSize: "1.2rem", color: "#0f172a" }}>
+                🏷️ Category Manager
+              </h3>
+              <p style={{ fontSize: "0.85rem", color: "#64748b" }}>
+                Add new product categories or remove unused categories. Any added category instantly becomes available in the customer navigation and product filters.
+              </p>
+            </div>
+
+            {/* Add New Category Box */}
+            <div className="admin-add-category-box">
+              <h4 style={{ fontSize: "0.98rem", marginBottom: "12px", color: "#0f766e" }}>
+                ➕ Add a New Product Category
+              </h4>
+              <form onSubmit={handleCreateCategory} style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "flex-end" }}>
+                <div style={{ flex: 1, minWidth: "220px" }}>
+                  <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "4px" }}>
+                    Category Name <span className="req">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g. Glass & Window Cleaners"
+                    value={newCatLabel}
+                    onChange={(e) => setNewCatLabel(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div style={{ width: "160px" }}>
+                  <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "4px" }}>
+                    Category Icon
+                  </label>
+                  <select
+                    className="form-control"
+                    value={newCatIcon}
+                    onChange={(e) => setNewCatIcon(e.target.value)}
+                  >
+                    <option value="🧴">🧴 Phenyl / Bottle</option>
+                    <option value="🚽">🚽 Toilet Acid</option>
+                    <option value="⚪">⚪ Mothballs</option>
+                    <option value="🧼">🧼 Bleach / Soap</option>
+                    <option value="🧹">🧹 Broom / Mop</option>
+                    <option value="🪣">🪣 Bucket & Mug</option>
+                    <option value="🪟">🪟 Glass Spray</option>
+                    <option value="🍳">🍳 Kitchen Cleaner</option>
+                    <option value="🧽">🧽 Sponge / Scrubber</option>
+                    <option value="✨">✨ Sanitizer</option>
+                    <option value="📦">📦 Other Supplies</option>
+                  </select>
+                </div>
+
+                <button type="submit" className="btn-primary" style={{ padding: "10px 20px", height: "42px" }}>
+                  Add Category
+                </button>
+              </form>
+            </div>
+
+            {/* Current Categories Table */}
+            <div className="admin-table-container" style={{ marginTop: "24px" }}>
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: "60px" }}>Icon</th>
+                    <th>Category Name</th>
+                    <th>Slug ID</th>
+                    <th>Catalog Count</th>
+                    <th style={{ textAlign: "right" }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {categories.map((cat) => {
+                    const count = cat.id === "all"
+                      ? products.length
+                      : products.filter((p) => p.category === cat.id).length;
+                    return (
+                      <tr key={cat.id}>
+                        <td style={{ fontSize: "1.4rem", textAlign: "center" }}>{cat.icon || "🏷️"}</td>
+                        <td>
+                          <strong>{cat.label}</strong>
+                        </td>
+                        <td>
+                          <code style={{ background: "#f1f5f9", padding: "3px 8px", borderRadius: "4px", fontSize: "0.82rem", color: "#475569" }}>
+                            {cat.id}
+                          </code>
+                        </td>
+                        <td>
+                          <span
+                            className="badge-pill"
+                            style={{
+                              background: count > 0 ? "#ecfdf5" : "#f1f5f9",
+                              color: count > 0 ? "#15803d" : "#64748b",
+                              padding: "4px 10px",
+                              borderRadius: "12px",
+                              fontSize: "0.78rem",
+                              fontWeight: "700"
+                            }}
+                          >
+                            {count} products
+                          </span>
+                        </td>
+                        <td style={{ textAlign: "right" }}>
+                          {cat.id === "all" ? (
+                            <span style={{ fontSize: "0.78rem", color: "#94a3b8" }}>System Default</span>
+                          ) : (
+                            <button
+                              className="btn-admin-delete"
+                              onClick={() => {
+                                if (confirm(`Delete category "${cat.label}"? Products in this category will be preserved safely.`)) {
+                                  removeCategory(cat.id);
+                                }
+                              }}
+                              title="Delete category"
+                            >
+                              🗑️ Remove Category
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+
+        {/* TAB 4: INCOMING DEMO ORDERS LOG */}
         {activeTab === "orders" && (
           <section className="admin-content-panel">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
@@ -632,7 +834,7 @@ export default function AdminDashboard() {
           </section>
         )}
 
-        {/* TAB 4: STORE SETTINGS */}
+        {/* TAB 5: STORE SETTINGS */}
         {activeTab === "settings" && (
           <section className="admin-content-panel">
             <h3 style={{ fontSize: "1.2rem", color: "#0f172a", marginBottom: "16px" }}>
@@ -663,18 +865,14 @@ export default function AdminDashboard() {
               </div>
 
               <div className="form-group">
-                <label>WhatsApp Order Desk Number (Without + or spaces)</label>
+                <label>WhatsApp Orders Hotline (Without Country Code)</label>
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="9491554114"
                   value={storeSettingsForm.whatsappNumber}
                   onChange={(e) => setStoreSettingsForm({ ...storeSettingsForm, whatsappNumber: e.target.value })}
                   required
                 />
-                <span style={{ fontSize: "0.72rem", color: "#64748b" }}>
-                  Orders sent via WhatsApp will be addressed to this number.
-                </span>
               </div>
 
               <div className="form-group">
@@ -686,13 +884,10 @@ export default function AdminDashboard() {
                   onChange={(e) => setStoreSettingsForm({ ...storeSettingsForm, deliveryMinimum: Number(e.target.value) })}
                   required
                 />
-                <span style={{ fontSize: "0.72rem", color: "#64748b" }}>
-                  Cart progress bar and qualification check updates automatically.
-                </span>
               </div>
 
               <div className="form-group full-width">
-                <label>Top Announcement Notice Bar</label>
+                <label>Top Announcement Notice</label>
                 <input
                   type="text"
                   className="form-control"
@@ -702,48 +897,36 @@ export default function AdminDashboard() {
                 />
               </div>
 
-              <div className="form-group full-width" style={{ marginTop: "12px" }}>
-                <button type="submit" className="btn-primary" style={{ width: "100%" }}>
-                  💾 Save & Apply Store Settings
+              <div className="form-group full-width" style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
+                <button type="submit" className="btn-primary" style={{ flex: 1 }}>
+                  💾 Save Configuration
+                </button>
+                <button
+                  type="button"
+                  className="btn-outline"
+                  onClick={() => {
+                    if (confirm("Reset all products, categories, and settings back to default demo state?")) {
+                      resetProductsToDefault();
+                    }
+                  }}
+                  style={{ color: "#b91c1c", borderColor: "#fca5a5" }}
+                >
+                  Factory Reset Demo Catalog
                 </button>
               </div>
             </form>
-
-            {/* Demo Reset Option */}
-            <div style={{ marginTop: "36px", paddingTop: "24px", borderTop: "1px dashed #cbd5e1" }}>
-              <h4 style={{ fontSize: "1rem", color: "#b91c1c", marginBottom: "6px" }}>
-                🔄 Reset Everything to Factory Demo State
-              </h4>
-              <p style={{ fontSize: "0.82rem", color: "#64748b", marginBottom: "14px" }}>
-                If you have edited prices, added mock items, or customized settings and wish to restore the pristine demo catalog:
-              </p>
-              <button
-                type="button"
-                className="btn-outline"
-                style={{ color: "#b91c1c", borderColor: "#fecaca", background: "#fef2f2" }}
-                onClick={() => {
-                  if (confirm("Reset all products, combos, and store settings back to original defaults?")) {
-                    resetProductsToDefault();
-                  }
-                }}
-              >
-                Reset All Products & Settings to Default
-              </button>
-            </div>
           </section>
         )}
 
         {/* Full Product Edit Modal */}
         {editingProduct && (
-          <div
-            className="modal-overlay open"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setEditingProduct(null);
-            }}
-          >
+          <div className="modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setEditingProduct(null); }}>
             <div className="modal-window">
               <div className="modal-header">
-                <h3>✏️ Edit Product: {editingProduct.name}</h3>
+                <div>
+                  <h3>✏️ Edit Product Details</h3>
+                  <p>Update title, pricing, category, pack size, or stock status</p>
+                </div>
                 <button className="btn-close-drawer" onClick={() => setEditingProduct(null)}>✕</button>
               </div>
 
@@ -755,6 +938,39 @@ export default function AdminDashboard() {
                     className="form-control"
                     value={editingProduct.name}
                     onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Category</label>
+                  <select
+                    className="form-control"
+                    value={editingProduct.category}
+                    onChange={(e) => {
+                      const sel = categories.find((c) => c.id === e.target.value);
+                      setEditingProduct({
+                        ...editingProduct,
+                        category: e.target.value,
+                        categoryName: sel ? sel.label : editingProduct.categoryName
+                      });
+                    }}
+                  >
+                    {categories.filter((c) => c.id !== "all").map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.icon ? `${c.icon} ` : ""}{c.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Pack Unit</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={editingProduct.unit}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, unit: e.target.value })}
                     required
                   />
                 </div>
@@ -777,17 +993,6 @@ export default function AdminDashboard() {
                     className="form-control"
                     value={editingProduct.mrp}
                     onChange={(e) => setEditingProduct({ ...editingProduct, mrp: Number(e.target.value) })}
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Pack Unit</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={editingProduct.unit}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, unit: e.target.value })}
                     required
                   />
                 </div>

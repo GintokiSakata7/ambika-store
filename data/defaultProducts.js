@@ -13,6 +13,16 @@ export const DEFAULT_SETTINGS = {
   currencySymbol: "₹"
 };
 
+export const DEFAULT_CATEGORIES = [
+  { id: "all", label: "All Items", icon: "✨" },
+  { id: "phenyl", label: "Phenol & Floor Cleaners", icon: "🧴" },
+  { id: "acids", label: "Acids & Toilet Cleaners", icon: "🚽" },
+  { id: "naphthalene", label: "Naphthalene Balls", icon: "⚪" },
+  { id: "powders", label: "Bleach & Disinfectants", icon: "🧼" },
+  { id: "brooms", label: "Brooms, Mops & Wipers", icon: "🧹" },
+  { id: "accessories", label: "Scrubbers & Buckets", icon: "🪣" }
+];
+
 export const DEFAULT_PRODUCTS = [
   {
     id: "prod-1",

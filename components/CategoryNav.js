@@ -1,27 +1,21 @@
 "use client";
 
 import React from "react";
-
-const CATEGORIES = [
-  { id: "all", label: "All Items" },
-  { id: "phenyl", label: "🧴 Phenol & Floor Wash" },
-  { id: "acids", label: "🚽 Acids & Toilet Cleaners" },
-  { id: "naphthalene", label: "⚪ Naphthalene Balls" },
-  { id: "powders", label: "🧼 Bleach & Powders" },
-  { id: "brooms", label: "🧹 Brooms, Mops & Wipers" },
-  { id: "accessories", label: "🪣 Scrubbers & Buckets" }
-];
+import { useStore } from "../context/StoreContext";
 
 export default function CategoryNav({ activeCategory, onSelectCategory }) {
+  const { categories } = useStore();
+
   return (
     <nav className="category-filter-nav" aria-label="Product categories">
-      {CATEGORIES.map((cat) => (
+      {categories.map((cat) => (
         <button
           key={cat.id}
           className={`cat-chip ${activeCategory === cat.id ? "active" : ""}`}
           onClick={() => onSelectCategory(cat.id)}
         >
-          {cat.label}
+          {cat.icon && <span style={{ marginRight: "6px" }}>{cat.icon}</span>}
+          <span>{cat.label}</span>
         </button>
       ))}
     </nav>

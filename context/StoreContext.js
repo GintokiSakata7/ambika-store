@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { DEFAULT_PRODUCTS, DEFAULT_COMBOS, DEFAULT_SETTINGS } from "../data/defaultProducts";
+import { DEFAULT_PRODUCTS, DEFAULT_COMBOS, DEFAULT_SETTINGS, DEFAULT_CATEGORIES } from "../data/defaultProducts";
 
 const StoreContext = createContext(null);
 
@@ -11,10 +11,15 @@ export function StoreProvider({ children }) {
   const [products, setProducts] = useState(DEFAULT_PRODUCTS);
   const [combos, setCombos] = useState(DEFAULT_COMBOS);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
   const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState([]);
   
+  // Role & Auth state
   const [currentRole, setCurrentRoleState] = useState("customer"); // "customer" | "admin"
+  const [currentUser, setCurrentUser] = useState(null); // { name, email, role }
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState("admin"); // "admin" | "customer"
   
   // Modals & Drawers state
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -30,6 +35,60 @@ export function StoreProvider({ children }) {
     } catch (e) {
       console.warn("Failed saving role", e);
     }
+  };
+
+  const openAdminLogin = () => {
+    setAuthModalTab("admin");
+    setIsAuthModalOpen(true);
+  };
+
+  const openCustomerLogin = () => {
+    setAuthModalTab("customer");
+    setIsAuthModalOpen(true);
+  };
+
+  const loginAsAdmin = (email, password) => {
+    const user = {
+      name: "Majin Studios Admin",
+      email: email || "admin@majinstudios.com",
+      role: "admin"
+    };
+    setCurrentUser(user);
+    setCurrentRoleState("admin");
+    setIsAuthModalOpen(false);
+    try {
+      localStorage.setItem("majin_studios_user", JSON.stringify(user));
+      localStorage.setItem("majin_studios_role", "admin");
+    } catch (e) {}
+    showToast("Signed in as Admin! Welcome to Store Management.", "success");
+    return { success: true };
+  };
+
+  const loginAsCustomer = (name, phone) => {
+    const user = {
+      name: name || "Customer",
+      phone: phone || "",
+      role: "customer"
+    };
+    setCurrentUser(user);
+    setCurrentRoleState("customer");
+    setIsAuthModalOpen(false);
+    try {
+      localStorage.setItem("majin_studios_user", JSON.stringify(user));
+      localStorage.setItem("majin_studios_role", "customer");
+    } catch (e) {}
+    showToast(`Welcome ${user.name}! You can browse and book items.`, "success");
+    return { success: true };
+  };
+
+  const logout = () => {
+    setCurrentUser(null);
+    setCurrentRoleState("customer");
+    try {
+      localStorage.removeItem("majin_studios_user");
+      localStorage.setItem("majin_studios_role", "customer");
+    } catch (e) {}
+    showToast("Returned to Customer Storefront", "info");
   };
 
   // Load persisted state from localStorage after mount
@@ -61,11 +120,21 @@ export function StoreProvider({ children }) {
         setSettings(parsedSettings);
       }
 
+      const savedCategories = localStorage.getItem("majin_studios_categories_v1");
+      if (savedCategories) {
+        setCategories(JSON.parse(savedCategories));
+      }
+
       const savedCart = localStorage.getItem("majin_studios_cart_v1") || localStorage.getItem("margin_chemicals_cart_v2");
       if (savedCart) setCart(JSON.parse(savedCart));
 
       const savedOrders = localStorage.getItem("majin_studios_orders_v1") || localStorage.getItem("margin_chemicals_orders_v2");
       if (savedOrders) setOrders(JSON.parse(savedOrders));
+
+      const savedUser = localStorage.getItem("majin_studios_user");
+      if (savedUser) {
+        setCurrentUser(JSON.parse(savedUser));
+      }
 
       const savedRole = localStorage.getItem("majin_studios_role") || localStorage.getItem("margin_demo_role");
       if (savedRole === "admin" || savedRole === "customer") {
@@ -85,6 +154,15 @@ export function StoreProvider({ children }) {
       console.warn("Failed saving products to storage", e);
     }
   }, [products, mounted]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    try {
+      localStorage.setItem("majin_studios_categories_v1", JSON.stringify(categories));
+    } catch (e) {
+      console.warn("Failed saving categories to storage", e);
+    }
+  }, [categories, mounted]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -263,11 +341,60 @@ export function StoreProvider({ children }) {
     showToast("Product deleted from catalog", "info");
   };
 
+  // Category Management (Admin)
+  const addCategory = ({ label, icon, id }) => {
+    if (!label || !label.trim()) {
+      showToast("Please enter a category name", "error");
+      return false;
+    }
+    const cleanLabel = label.trim();
+    const cleanId = (id || cleanLabel).toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-");
+    if (categories.some((c) => c.id === cleanId)) {
+      showToast("A category with this identifier already exists", "error");
+      return false;
+    }
+    const newCat = {
+      id: cleanId,
+      label: cleanLabel,
+      icon: icon && icon.trim() ? icon.trim() : "🏷️"
+    };
+    setCategories((prev) => [...prev, newCat]);
+    showToast(`Category "${cleanLabel}" added successfully!`, "success");
+    return true;
+  };
+
+  const removeCategory = (categoryId) => {
+    if (categoryId === "all") {
+      showToast("Cannot delete default 'All Items' category", "error");
+      return false;
+    }
+    const target = categories.find((c) => c.id === categoryId);
+    setCategories((prev) => prev.filter((c) => c.id !== categoryId));
+    // Reassign products to 'accessories' so they remain accessible
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.category === categoryId
+          ? { ...p, category: "accessories", categoryName: "General Cleaning Supplies" }
+          : p
+      )
+    );
+    showToast(`Removed category "${target ? target.label : categoryId}"`, "info");
+    return true;
+  };
+
+  const updateCategory = (categoryId, updated) => {
+    setCategories((prev) =>
+      prev.map((c) => (c.id === categoryId ? { ...c, ...updated } : c))
+    );
+    showToast("Category updated successfully", "success");
+  };
+
   const resetProductsToDefault = () => {
     setProducts(DEFAULT_PRODUCTS);
     setCombos(DEFAULT_COMBOS);
     setSettings(DEFAULT_SETTINGS);
-    showToast("Reset all products and settings to default demo state!", "info");
+    setCategories(DEFAULT_CATEGORIES);
+    showToast("Reset all products, categories, and settings to default!", "info");
   };
 
   // Admin Settings Update
@@ -380,8 +507,22 @@ export function StoreProvider({ children }) {
         mounted,
         currentRole,
         setCurrentRole,
+        currentUser,
+        isAuthModalOpen,
+        setIsAuthModalOpen,
+        authModalTab,
+        setAuthModalTab,
+        openAdminLogin,
+        openCustomerLogin,
+        loginAsAdmin,
+        loginAsCustomer,
+        logout,
         products,
         combos,
+        categories,
+        addCategory,
+        removeCategory,
+        updateCategory,
         settings,
         cart,
         orders,
