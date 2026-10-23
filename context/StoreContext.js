@@ -14,6 +14,8 @@ export function StoreProvider({ children }) {
   const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState([]);
   
+  const [currentRole, setCurrentRoleState] = useState("customer"); // "customer" | "admin"
+  
   // Modals & Drawers state
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -21,21 +23,54 @@ export function StoreProvider({ children }) {
   const [activeProductModal, setActiveProductModal] = useState(null);
   const [toasts, setToasts] = useState([]);
 
+  const setCurrentRole = (role) => {
+    setCurrentRoleState(role);
+    try {
+      localStorage.setItem("majin_studios_role", role);
+    } catch (e) {
+      console.warn("Failed saving role", e);
+    }
+  };
+
   // Load persisted state from localStorage after mount
   useEffect(() => {
     setMounted(true);
     try {
-      const savedProducts = localStorage.getItem("margin_chemicals_products_v2");
-      if (savedProducts) setProducts(JSON.parse(savedProducts));
+      const savedProducts = localStorage.getItem("majin_studios_products_v1") || localStorage.getItem("margin_chemicals_products_v2");
+      if (savedProducts) {
+        const parsedProducts = JSON.parse(savedProducts);
+        const sanitizedProducts = parsedProducts.map(p => ({
+          ...p,
+          description: p.description ? p.description.replace(/Margin Studio/gi, "Majin Studios") : p.description
+        }));
+        setProducts(sanitizedProducts);
+      }
 
-      const savedSettings = localStorage.getItem("margin_chemicals_settings_v2");
-      if (savedSettings) setSettings(JSON.parse(savedSettings));
+      const savedSettings = localStorage.getItem("majin_studios_settings_v1") || localStorage.getItem("margin_chemicals_settings_v2");
+      if (savedSettings) {
+        const parsedSettings = JSON.parse(savedSettings);
+        if (!parsedSettings.storeName || parsedSettings.storeName.includes("Margin")) {
+          parsedSettings.storeName = "Majin Studios";
+        }
+        if (!parsedSettings.companyName || parsedSettings.companyName.includes("Margin")) {
+          parsedSettings.companyName = "Majin Studios";
+        }
+        if (parsedSettings.deliveryBannerNotice && parsedSettings.deliveryBannerNotice.includes("Margin")) {
+          parsedSettings.deliveryBannerNotice = parsedSettings.deliveryBannerNotice.replace(/Margin Studios/gi, "Majin Studios").replace(/Margin Studio/gi, "Majin Studios");
+        }
+        setSettings(parsedSettings);
+      }
 
-      const savedCart = localStorage.getItem("margin_chemicals_cart_v2");
+      const savedCart = localStorage.getItem("majin_studios_cart_v1") || localStorage.getItem("margin_chemicals_cart_v2");
       if (savedCart) setCart(JSON.parse(savedCart));
 
-      const savedOrders = localStorage.getItem("margin_chemicals_orders_v2");
+      const savedOrders = localStorage.getItem("majin_studios_orders_v1") || localStorage.getItem("margin_chemicals_orders_v2");
       if (savedOrders) setOrders(JSON.parse(savedOrders));
+
+      const savedRole = localStorage.getItem("majin_studios_role") || localStorage.getItem("margin_demo_role");
+      if (savedRole === "admin" || savedRole === "customer") {
+        setCurrentRoleState(savedRole);
+      }
     } catch (e) {
       console.warn("Error loading persisted store data", e);
     }
@@ -45,7 +80,7 @@ export function StoreProvider({ children }) {
   useEffect(() => {
     if (!mounted) return;
     try {
-      localStorage.setItem("margin_chemicals_products_v2", JSON.stringify(products));
+      localStorage.setItem("majin_studios_products_v1", JSON.stringify(products));
     } catch (e) {
       console.warn("Failed saving products to storage", e);
     }
@@ -54,7 +89,7 @@ export function StoreProvider({ children }) {
   useEffect(() => {
     if (!mounted) return;
     try {
-      localStorage.setItem("margin_chemicals_settings_v2", JSON.stringify(settings));
+      localStorage.setItem("majin_studios_settings_v1", JSON.stringify(settings));
     } catch (e) {
       console.warn("Failed saving settings to storage", e);
     }
@@ -63,7 +98,7 @@ export function StoreProvider({ children }) {
   useEffect(() => {
     if (!mounted) return;
     try {
-      localStorage.setItem("margin_chemicals_cart_v2", JSON.stringify(cart));
+      localStorage.setItem("majin_studios_cart_v1", JSON.stringify(cart));
     } catch (e) {
       console.warn("Failed saving cart to storage", e);
     }
@@ -72,7 +107,7 @@ export function StoreProvider({ children }) {
   useEffect(() => {
     if (!mounted) return;
     try {
-      localStorage.setItem("margin_chemicals_orders_v2", JSON.stringify(orders));
+      localStorage.setItem("majin_studios_orders_v1", JSON.stringify(orders));
     } catch (e) {
       console.warn("Failed saving orders to storage", e);
     }
@@ -327,10 +362,24 @@ export function StoreProvider({ children }) {
     setOrders((prev) => [newOrder, ...prev]);
   };
 
+  const updateOrderStatus = (orderId, newStatus) => {
+    setOrders((prev) =>
+      prev.map((ord) => (ord.orderId === orderId ? { ...ord, status: newStatus } : ord))
+    );
+    showToast(`Order ${orderId} marked as ${newStatus}`, "info");
+  };
+
+  const deleteOrder = (orderId) => {
+    setOrders((prev) => prev.filter((ord) => ord.orderId !== orderId));
+    showToast(`Order ${orderId} removed`, "info");
+  };
+
   return (
     <StoreContext.Provider
       value={{
         mounted,
+        currentRole,
+        setCurrentRole,
         products,
         combos,
         settings,
@@ -365,7 +414,9 @@ export function StoreProvider({ children }) {
         updateSettings,
         generateWhatsAppMessage,
         generateWhatsAppUrl,
-        recordDemoOrder
+        recordDemoOrder,
+        updateOrderStatus,
+        deleteOrder
       }}
     >
       {children}

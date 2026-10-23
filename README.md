@@ -1,14 +1,13 @@
-# Margin Studios Chemicals — House Cleaning Shop Website
+# Majin Studios — House Cleaning Shop Website
 
-A clean, modern, professional e-commerce and demo website for **Margin Studios Chemicals** (by **Margin Studio**), specialized in housekeeping chemicals and domestic cleaning supplies with instant WhatsApp ordering and delivery address routing.
+A clean, modern, professional e-commerce and demo website for **Majin Studios**, specialized in housekeeping chemicals and domestic cleaning supplies with instant WhatsApp ordering and delivery address routing.
 
 ---
 
 ## 🌟 Key Features
 
 1. **Brand & Identity**:
-   - Company Name: **Margin Studio**
-   - Store Name: **Margin Studios Chemicals**
+   - Company & Store Name: **Majin Studios**
    - WhatsApp Order Line: **+91 94915 54114**
    - Clean, human, professional design (calm clean teal, slate, and crisp white — no garish rainbow gradients).
 

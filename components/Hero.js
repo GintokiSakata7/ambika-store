@@ -79,7 +79,7 @@ export default function Hero() {
         <div className="hero-image-wrapper">
           <img
             src="/images/hero.jpg"
-            alt="Margin Studios Chemicals Store & House Cleaning Supplies"
+            alt="Majin Studios - House Cleaning Supplies & Chemicals"
           />
           <div className="hero-floating-badge">
             <div className="floating-badge-text">

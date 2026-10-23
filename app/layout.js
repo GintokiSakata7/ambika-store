@@ -2,9 +2,9 @@ import "./globals.css";
 import { StoreProvider } from "../context/StoreContext";
 
 export const metadata = {
-  title: "Margin Studios Chemicals | House Cleaning Supplies by Margin Studio",
+  title: "Majin Studios | House Cleaning Supplies & Chemicals",
   description: "Shop quality house cleaning chemicals, concentrated phenyl, bathroom acids, naphthalene balls, bleaching powder, brooms, mops & scrubbers. Direct doorstep delivery for orders above ₹500 via WhatsApp at +91 9491554114.",
-  keywords: "house cleaning chemicals, white phenyl, bathroom acid, naphthalene balls, bleaching powder, brooms, mops, scrubbers, Margin Studio, Margin Studios Chemicals",
+  keywords: "house cleaning chemicals, white phenyl, bathroom acid, naphthalene balls, bleaching powder, brooms, mops, scrubbers, Majin Studios",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",

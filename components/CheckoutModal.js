@@ -134,7 +134,7 @@ export default function CheckoutModal() {
               </svg>
               <span>Delivery Details & WhatsApp Checkout</span>
             </h3>
-            <p>Order connects directly to Margin Studio WhatsApp (+91 {settings.whatsappNumber})</p>
+            <p>Order connects directly to {settings.storeName} WhatsApp (+91 {settings.whatsappNumber})</p>
           </div>
           <button
             className="btn-close-drawer"

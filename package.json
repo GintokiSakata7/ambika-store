@@ -1,7 +1,7 @@
 {
   "name": "house-cleaning",
   "version": "1.0.0",
-  "description": "A clean, modern, professional e-commerce and demo website for **Margin Studios Chemicals** (by **Margin Studio**), specialized in housekeeping chemicals and domestic cleaning supplies with instant WhatsApp ordering and delivery address routing.",
+  "description": "A clean, modern, professional e-commerce and demo website for Majin Studios, specialized in housekeeping chemicals and domestic cleaning supplies with instant WhatsApp ordering and delivery address routing.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

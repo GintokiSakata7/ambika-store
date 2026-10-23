@@ -1,13 +1,13 @@
-// Initial default catalog for Margin Studios Chemicals
-// Maintained by Margin Studio
+// Initial default catalog for Majin Studios
+// Maintained by Majin Studios
 
 export const DEFAULT_SETTINGS = {
-  storeName: "Margin Studios Chemicals",
-  companyName: "Margin Studio",
+  storeName: "Majin Studios",
+  companyName: "Majin Studios",
   tagline: "House Cleaning Chemicals & Sanitary Supplies",
   whatsappNumber: "9491554114",
   deliveryMinimum: 500,
-  deliveryBannerNotice: "Doorstep Home Delivery for orders above ₹500 | Fast Local Dispatch by Margin Studio",
+  deliveryBannerNotice: "Doorstep Home Delivery for orders above ₹500 | Fast Local Dispatch by Majin Studios",
   supportPhone: "+91 94915 54114",
   storeAddress: "Main Commercial Market, Housekeeping Depot",
   currencySymbol: "₹"
