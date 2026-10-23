@@ -1,0 +1,20 @@
+{
+  "name": "house-cleaning",
+  "version": "1.0.0",
+  "description": "A clean, modern, professional e-commerce and demo website for **Margin Studios Chemicals** (by **Margin Studio**), specialized in housekeeping chemicals and domestic cleaning supplies with instant WhatsApp ordering and delivery address routing.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "next": "^16.4.3",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  }
+}
