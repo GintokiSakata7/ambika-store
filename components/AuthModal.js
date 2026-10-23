@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useStore } from "../context/StoreContext";
+import { IconShield, IconLock, IconUser, IconZap, IconX, IconCheck } from "./Icons";
 
 export default function AuthModal() {
   const {
@@ -34,7 +35,7 @@ export default function AuthModal() {
     setTimeout(() => {
       loginAsAdmin("admin@majinstudios.com", "admin");
       setIsAutoLoggingIn(false);
-    }, 400);
+    }, 350);
   };
 
   const handleAdminSubmit = (e) => {
@@ -60,10 +61,12 @@ export default function AuthModal() {
         {/* Modal Header */}
         <div className="auth-modal-header">
           <div className="auth-header-brand">
-            <div className="auth-shield-icon">🛡️</div>
+            <div className="auth-shield-icon">
+              <IconLock size={18} />
+            </div>
             <div>
               <h3>Majin Studios Sign In</h3>
-              <p>Demo Admin Portal & Customer Access</p>
+              <p>Demo Store Owner &amp; Customer Portal</p>
             </div>
           </div>
           <button
@@ -71,7 +74,7 @@ export default function AuthModal() {
             onClick={() => setIsAuthModalOpen(false)}
             title="Close modal"
           >
-            ✕
+            <IconX size={18} />
           </button>
         </div>
 
@@ -81,13 +84,15 @@ export default function AuthModal() {
             className={`auth-tab-btn ${authModalTab === "admin" ? "active" : ""}`}
             onClick={() => setAuthModalTab("admin")}
           >
-            🛡️ Store Admin Demo
+            <IconShield size={14} style={{ display: "inline-block", verticalAlign: "middle", marginRight: "6px" }} />
+            Store Admin Demo
           </button>
           <button
             className={`auth-tab-btn ${authModalTab === "customer" ? "active" : ""}`}
             onClick={() => setAuthModalTab("customer")}
           >
-            👤 Customer Shopper
+            <IconUser size={14} style={{ display: "inline-block", verticalAlign: "middle", marginRight: "6px" }} />
+            Customer Access
           </button>
         </div>
 
@@ -101,7 +106,7 @@ export default function AuthModal() {
                   <span className="demo-card-title">Instant Demo Access</span>
                 </div>
                 <p className="demo-card-desc">
-                  Click below to auto-fill credentials and immediately enter the Store Admin Dashboard to manage products and categories.
+                  Auto-fill demo credentials and enter the Store Admin Dashboard to edit products and manage categories.
                 </p>
                 <button
                   type="button"
@@ -109,16 +114,11 @@ export default function AuthModal() {
                   onClick={handleOneClickDemoLogin}
                   disabled={isAutoLoggingIn}
                 >
-                  {isAutoLoggingIn ? (
-                    <span>⏳ Signing in as Admin...</span>
-                  ) : (
-                    <>
-                      <span>⚡ One-Click Auto Credentials & Login</span>
-                    </>
-                  )}
+                  <IconZap size={16} />
+                  <span>{isAutoLoggingIn ? "Signing In..." : "Auto-Fill Credentials & Login"}</span>
                 </button>
                 <div className="demo-credentials-chips">
-                  <span>Email: <code>admin@majinstudios.com</code></span>
+                  <span>Username: <code>admin@majinstudios.com</code></span>
                   <span>Password: <code>admin</code></span>
                 </div>
               </div>
@@ -130,7 +130,7 @@ export default function AuthModal() {
               {/* Manual Form */}
               <form onSubmit={handleAdminSubmit} className="auth-form">
                 <div className="form-group">
-                  <label htmlFor="admin-email">Admin Email / Username</label>
+                  <label htmlFor="admin-email">Username / Email</label>
                   <input
                     id="admin-email"
                     type="text"
@@ -148,7 +148,7 @@ export default function AuthModal() {
                     id="admin-password"
                     type="password"
                     className="form-control"
-                    placeholder="Enter password"
+                    placeholder="admin"
                     value={adminPassword}
                     onChange={(e) => setAdminPassword(e.target.value)}
                     required
@@ -161,21 +161,21 @@ export default function AuthModal() {
                     className="btn-link-action"
                     onClick={handleFillDemoCredentials}
                   >
-                    Auto-Fill Demo Credentials
+                    Fill Demo Credentials
                   </button>
                 </div>
 
                 <button type="submit" className="btn-primary full-width">
-                  Sign In to Admin Dashboard →
+                  Sign In to Admin Dashboard
                 </button>
               </form>
             </div>
           ) : (
             <div className="auth-customer-pane">
               <div className="customer-info-box">
-                <h4>Welcome to Majin Studios!</h4>
+                <h4>Welcome to Majin Studios</h4>
                 <p>
-                  You can explore our full catalog of house cleaning chemicals and book orders directly via WhatsApp. Sign in with your name or continue as a guest.
+                  Explore our house cleaning chemicals and book orders directly via WhatsApp. You can sign in with your name or continue as guest.
                 </p>
               </div>
 
@@ -193,7 +193,7 @@ export default function AuthModal() {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="customer-phone">WhatsApp Mobile Number (Optional)</label>
+                  <label htmlFor="customer-phone">WhatsApp Mobile (Optional)</label>
                   <input
                     id="customer-phone"
                     type="tel"
@@ -207,7 +207,7 @@ export default function AuthModal() {
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "16px" }}>
                   <button type="submit" className="btn-primary full-width">
-                    Save Details & Continue Shopping
+                    Save Profile &amp; Continue
                   </button>
                   <button
                     type="button"

@@ -14,13 +14,13 @@ export const DEFAULT_SETTINGS = {
 };
 
 export const DEFAULT_CATEGORIES = [
-  { id: "all", label: "All Items", icon: "✨" },
-  { id: "phenyl", label: "Phenol & Floor Cleaners", icon: "🧴" },
-  { id: "acids", label: "Acids & Toilet Cleaners", icon: "🚽" },
-  { id: "naphthalene", label: "Naphthalene Balls", icon: "⚪" },
-  { id: "powders", label: "Bleach & Disinfectants", icon: "🧼" },
-  { id: "brooms", label: "Brooms, Mops & Wipers", icon: "🧹" },
-  { id: "accessories", label: "Scrubbers & Buckets", icon: "🪣" }
+  { id: "all", label: "All Items", icon: "grid" },
+  { id: "phenyl", label: "Phenol & Floor Cleaners", icon: "droplet" },
+  { id: "acids", label: "Acids & Toilet Cleaners", icon: "flask" },
+  { id: "naphthalene", label: "Naphthalene Balls", icon: "shield" },
+  { id: "powders", label: "Bleach & Disinfectants", icon: "sparkles" },
+  { id: "brooms", label: "Brooms, Mops & Wipers", icon: "brush" },
+  { id: "accessories", label: "Scrubbers & Buckets", icon: "layers" }
 ];
 
 export const DEFAULT_PRODUCTS = [
@@ -404,3 +404,151 @@ export const DEFAULT_COMBOS = [
     ]
   }
 ];
+
+export const DEFAULT_WHOLESALE_PRODUCTS = [
+  {
+    id: "wh-1",
+    name: "Commercial White Phenyl 5L (Carton of 4 - 20L)",
+    category: "phenyl",
+    categoryName: "Phenol & Floor Cleaners",
+    price: 1200,
+    mrp: 1600,
+    unit: "Carton of 4 Cans (Rs. 300/can)",
+    image: "/images/white_phenyl_cleaner.jpg",
+    badge: "Wholesale Carton",
+    rating: 4.9,
+    reviews: 64,
+    potency: "Concentrated Pine Formulation",
+    stock: "In Stock",
+    isWholesale: true,
+    minQty: 1,
+    description: "Factory direct supply carton of 4 concentrated 5L cans. Perfect for shop resale, apartments, and commercial facilities."
+  },
+  {
+    id: "wh-2",
+    name: "Heavy Duty Floor Phenyl 20L Industrial Carboy",
+    category: "phenyl",
+    categoryName: "Phenol & Floor Cleaners",
+    price: 1150,
+    mrp: 1500,
+    unit: "20 Litre Drum Container",
+    image: "/images/white_phenyl_cleaner.jpg",
+    badge: "Industrial Drum",
+    rating: 4.8,
+    reviews: 42,
+    potency: "Commercial Grade",
+    stock: "In Stock",
+    isWholesale: true,
+    minQty: 1,
+    description: "20-litre sealed industrial container for bulk floor cleaning in hospitals, colleges, and commercial complexes."
+  },
+  {
+    id: "wh-3",
+    name: "Commercial Toilet Acid Descaler 5L (Pack of 2)",
+    category: "acids",
+    categoryName: "Acids & Toilet Cleaners",
+    price: 560,
+    mrp: 750,
+    unit: "Pack of 2 × 5L Cans (10L)",
+    image: "/images/toilet_acid_cleaner.jpg",
+    badge: "Wholesale 10L",
+    rating: 4.9,
+    reviews: 58,
+    potency: "Industrial Hydrochloric Acid",
+    stock: "In Stock",
+    isWholesale: true,
+    minQty: 1,
+    description: "Commercial scale descaling acid in dual 5L container pack. Powerful hard water stain removal for institutions."
+  },
+  {
+    id: "wh-4",
+    name: "Grade-1 Stable Bleaching Powder (25kg Master Bag)",
+    category: "powders",
+    categoryName: "Bleach & Disinfectants",
+    price: 1250,
+    mrp: 1650,
+    unit: "25kg Heavy Duty SACK",
+    image: "/images/bleach_scrubber_bucket.jpg",
+    badge: "Distributor Bag",
+    rating: 4.9,
+    reviews: 77,
+    potency: "33% Available Chlorine",
+    stock: "In Stock",
+    isWholesale: true,
+    minQty: 1,
+    description: "25kg wholesale sack of stabilized bleaching powder for municipal, water tank, and commercial sanitation."
+  },
+  {
+    id: "wh-5",
+    name: "Pure White Naphthalene Moth Balls (5kg Master Carton)",
+    category: "naphthalene",
+    categoryName: "Pest & Odor Control",
+    price: 1150,
+    mrp: 1550,
+    unit: "5kg Carton (50 x 100g Packs)",
+    image: "/images/naphthalene_balls.jpg",
+    badge: "Retail Ready",
+    rating: 5.0,
+    reviews: 91,
+    potency: "99.5% Purity",
+    stock: "In Stock",
+    isWholesale: true,
+    minQty: 1,
+    description: "Master wholesale carton of 50 retail-ready 100g pouches. Best margin for retail grocery and hardware shops."
+  },
+  {
+    id: "wh-6",
+    name: "Natural Cheepuru Grass Brooms (Bundle of 12 Brooms)",
+    category: "brooms",
+    categoryName: "Brooms & Mops",
+    price: 960,
+    mrp: 1320,
+    unit: "Bundle of 12 Brooms (Rs. 80/pc)",
+    image: "/images/brooms_and_mop.jpg",
+    badge: "Bundle Deal",
+    rating: 4.9,
+    reviews: 114,
+    potency: "Premium Hill Grass",
+    stock: "In Stock",
+    isWholesale: true,
+    minQty: 1,
+    description: "Handcrafted natural grass brooms tied with strong nylon bind. High margin stock for general stores."
+  },
+  {
+    id: "wh-7",
+    name: "Heavy Duty Twist Cotton Floor Mops (Bundle of 10)",
+    category: "brooms",
+    categoryName: "Brooms & Mops",
+    price: 1150,
+    mrp: 1600,
+    unit: "Pack of 10 Mops with Rods",
+    image: "/images/brooms_and_mop.jpg",
+    badge: "Bulk Pack",
+    rating: 4.8,
+    reviews: 39,
+    potency: "Pure Bleached Cotton",
+    stock: "In Stock",
+    isWholesale: true,
+    minQty: 1,
+    description: "Super absorbent loop-end cotton mops with sturdy powder-coated handles. Built for heavy commercial use."
+  },
+  {
+    id: "wh-8",
+    name: "Heavy Duty Floor Squeegee Wiper 24\" (Carton of 6)",
+    category: "brooms",
+    categoryName: "Brooms & Mops",
+    price: 840,
+    mrp: 1200,
+    unit: "Carton of 6 Wipers (Rs. 140/pc)",
+    image: "/images/cleaning_accessories.jpg",
+    badge: "Commercial Wiper",
+    rating: 4.7,
+    reviews: 32,
+    potency: "Double Edge Rubber",
+    stock: "In Stock",
+    isWholesale: true,
+    minQty: 1,
+    description: "24-inch wide rubber wiper blade with reinforced metallic socket for rapid water clearing in large floor spaces."
+  }
+];
+

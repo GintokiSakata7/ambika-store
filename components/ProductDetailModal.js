@@ -2,13 +2,16 @@
 
 import React from "react";
 import { useStore } from "../context/StoreContext";
+import { IconCheck, IconX, IconPlus, IconWhatsApp, IconSparkles } from "./Icons";
 
 export default function ProductDetailModal() {
   const {
     activeProductModal,
     setActiveProductModal,
     addToCart,
-    settings
+    getRecommendations,
+    settings,
+    t
   } = useStore();
 
   if (!activeProductModal) return null;
@@ -23,6 +26,8 @@ export default function ProductDetailModal() {
     addToCart(prod, 1);
     setActiveProductModal(null);
   };
+
+  const recommendedItems = getRecommendations(prod.id, 2);
 
   return (
     <div
@@ -39,12 +44,12 @@ export default function ProductDetailModal() {
             onClick={() => setActiveProductModal(null)}
             title="Close modal"
           >
-            ✕
+            <IconX size={18} />
           </button>
         </div>
 
         <div className="modal-body">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+          <div className="product-detail-grid">
             <div>
               <img
                 src={prod.image}
@@ -53,7 +58,7 @@ export default function ProductDetailModal() {
                   width: "100%",
                   aspectRatio: "1/1",
                   objectFit: "cover",
-                  borderRadius: "10px",
+                  borderRadius: "8px",
                   border: "1px solid #e2e8f0"
                 }}
               />
@@ -69,12 +74,12 @@ export default function ProductDetailModal() {
               </h3>
 
               <div className="product-price-row" style={{ marginBottom: "12px" }}>
-                <span className="product-curr-price" style={{ fontSize: "1.4rem" }}>₹{prod.price}</span>
+                <span className="product-curr-price" style={{ fontSize: "1.4rem" }}>Rs. {prod.price}</span>
                 {prod.mrp > prod.price && (
-                  <span className="product-mrp-price" style={{ fontSize: "0.95rem" }}>₹{prod.mrp}</span>
+                  <span className="product-mrp-price" style={{ fontSize: "0.95rem" }}>Rs. {prod.mrp}</span>
                 )}
                 {savings > 0 && (
-                  <span className="product-save-badge">Save ₹{savings}</span>
+                  <span className="product-save-badge">Save Rs. {savings}</span>
                 )}
               </div>
 
@@ -100,26 +105,24 @@ export default function ProductDetailModal() {
               )}
 
               {prod.features && prod.features.length > 0 && (
-                <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "4px", marginBottom: "16px" }}>
+                <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "4px", marginBottom: "16px", padding: 0 }}>
                   {prod.features.map((f, i) => (
                     <li key={i} style={{ fontSize: "0.8rem", color: "#334155", display: "flex", alignItems: "center", gap: "6px" }}>
-                      <span style={{ color: "#0f766e", fontWeight: "bold" }}>✓</span>
+                      <IconCheck size={14} style={{ color: "#0f766e" }} />
                       <span>{f}</span>
                     </li>
                   ))}
                 </ul>
               )}
 
-              <div style={{ display: "flex", gap: "10px" }}>
+              <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
                 <button
                   className="btn-primary"
                   onClick={handleAddToCart}
-                  style={{ flex: 1 }}
+                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                    <path d="M12 5v14M5 12h14" />
-                  </svg>
-                  <span>Add to Cart (₹{prod.price})</span>
+                  <IconPlus size={16} />
+                  <span>Add to Cart (Rs. {prod.price})</span>
                 </button>
 
                 <a
@@ -127,12 +130,37 @@ export default function ProductDetailModal() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-whatsapp-cta"
-                  style={{ padding: "10px 14px", fontSize: "0.84rem" }}
+                  style={{ padding: "10px 14px", fontSize: "0.84rem", display: "flex", alignItems: "center", gap: "6px" }}
                   title="Direct WhatsApp Inquiry"
                 >
-                  WhatsApp
+                  <IconWhatsApp size={16} />
+                  <span>WhatsApp</span>
                 </a>
               </div>
+
+              {/* Frequently Bought Together recommendation in modal */}
+              {recommendedItems.length > 0 && (
+                <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "12px" }}>
+                  <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "#64748b", display: "flex", alignItems: "center", gap: "4px", marginBottom: "8px" }}>
+                    <IconSparkles size={13} style={{ color: "#0f766e" }} />
+                    <span>Frequently paired with:</span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {recommendedItems.map((r) => (
+                      <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f8fafc", padding: "6px 10px", borderRadius: "6px", fontSize: "0.78rem" }}>
+                        <span style={{ color: "#1e293b", fontWeight: 500 }}>{r.name} - Rs. {r.price}</span>
+                        <button
+                          onClick={() => addToCart(r, 1)}
+                          className="btn-outline"
+                          style={{ padding: "2px 8px", fontSize: "0.72rem" }}
+                        >
+                          + Add
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useStore } from "../context/StoreContext";
+import { IconCheck, IconTruck, IconPlus } from "./Icons";
 
 export default function ComboSection() {
   const { combos, addComboToCart, settings } = useStore();
@@ -12,11 +13,11 @@ export default function ComboSection() {
         <div className="section-head-wrapper">
           <div className="section-head">
             <span className="combo-badge-guarantee">
-              ✨ Instant Home Delivery Eligible (&gt; ₹{settings.deliveryMinimum})
+              Doorstep Delivery Eligible (&gt; ₹{settings.deliveryMinimum})
             </span>
             <h2>Money-Saver Cleaning Bundles</h2>
             <p>
-              Hand-picked complete packages covering floors, washrooms, and daily utilities that immediately meet our doorstep delivery threshold.
+              Complete curated packages for floors, washrooms, and housekeeping utilities that immediately qualify for home delivery.
             </p>
           </div>
         </div>
@@ -27,7 +28,8 @@ export default function ComboSection() {
               <div className="combo-media">
                 <img src={combo.image} alt={combo.name} loading="lazy" />
                 <span className="combo-delivery-tag">
-                  🚚 Qualifies for Home Delivery
+                  <IconTruck size={13} style={{ display: "inline-block", verticalAlign: "middle", marginRight: "4px" }} />
+                  Qualifies for Home Delivery
                 </span>
               </div>
 
@@ -38,9 +40,7 @@ export default function ComboSection() {
                 <ul className="combo-includes-list">
                   {combo.items.map((item, idx) => (
                     <li key={idx}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
+                      <IconCheck size={14} style={{ color: "#0f766e", flexShrink: 0 }} />
                       <span>{item}</span>
                     </li>
                   ))}
@@ -58,12 +58,9 @@ export default function ComboSection() {
                   <button
                     className="btn-primary"
                     onClick={() => addComboToCart(combo)}
+                    style={{ display: "flex", alignItems: "center", gap: "6px" }}
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                      <circle cx="8" cy="21" r="1" />
-                      <circle cx="19" cy="21" r="1" />
-                      <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
-                    </svg>
+                    <IconPlus size={15} />
                     <span>Add Bundle</span>
                   </button>
                 </div>

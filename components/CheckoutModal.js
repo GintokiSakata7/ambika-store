@@ -2,35 +2,50 @@
 
 import React, { useState } from "react";
 import { useStore } from "../context/StoreContext";
+import {
+  IconTruck,
+  IconStore,
+  IconWhatsApp,
+  IconX,
+  IconCheck,
+  IconMapPin,
+  IconNavigation
+} from "./Icons";
 
 export default function CheckoutModal() {
   const {
     cart,
-    totalItems,
     subtotal,
     deliveryMinimum,
     isDeliveryEligible,
     remainingForDelivery,
-    settings,
     isCheckoutOpen,
     setIsCheckoutOpen,
-    generateWhatsAppMessage,
+    createOrder,
     generateWhatsAppUrl,
-    recordDemoOrder,
-    showToast
+    showToast,
+    settings,
+    t
   } = useStore();
 
-  const [orderType, setOrderType] = useState("delivery");
+  const [orderType, setOrderType] = useState(isDeliveryEligible ? "delivery" : "pickup");
+
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
+    altPhone: "",
+    doorNo: "",
+    floor: "",
     address: "",
     landmark: "",
     pincode: "",
     timeSlot: "Anytime Today",
-    paymentMethod: "Cash on Delivery (COD)",
     notes: ""
   });
+
+  const [coords, setCoords] = useState(null);
+  const [locating, setLocating] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   if (!isCheckoutOpen) return null;
 
@@ -39,119 +54,151 @@ export default function CheckoutModal() {
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
-  const validateForm = () => {
-    if (!formData.fullName.trim()) {
-      alert("Please enter your full name.");
-      return false;
-    }
-    if (!formData.phone.trim() || formData.phone.trim().length < 10) {
-      alert("Please enter a valid 10-digit mobile number.");
-      return false;
-    }
-    if (orderType === "delivery") {
-      if (!formData.address.trim()) {
-        alert("Please enter your delivery address.");
-        return false;
-      }
-      if (!formData.pincode.trim() || formData.pincode.trim().length < 5) {
-        alert("Please enter a valid pincode.");
-        return false;
-      }
-    }
-    return true;
-  };
-
-  const handleSendWhatsApp = () => {
-    if (!validateForm()) return;
-
-    if (orderType === "delivery" && !isDeliveryEligible) {
-      const confirmProceed = confirm(
-        `Notice: Our doorstep delivery is normally for orders above ₹${deliveryMinimum}.\nYour current subtotal is ₹${subtotal}.\n\nDo you want to send this order to WhatsApp for special confirmation anyway?`
-      );
-      if (!confirmProceed) return;
-    }
-
-    // Record order in demo orders list
-    recordDemoOrder(formData, orderType);
-
-    // Generate WhatsApp URL
-    const url = generateWhatsAppUrl(formData, orderType);
-
-    showToast("Opening WhatsApp with your order...", "success");
-
-    // Open WhatsApp
-    const opened = window.open(url, "_blank");
-    if (!opened || opened.closed || typeof opened.closed === "undefined") {
-      window.location.href = url;
-    }
-
-    setIsCheckoutOpen(false);
-  };
-
-  const handleCopyMessage = () => {
-    if (!formData.fullName.trim() || !formData.phone.trim()) {
-      alert("Please fill in your name and phone number first.");
+  // GPS Auto-Fill (Session only)
+  const handleGpsAutoFill = () => {
+    if (!navigator.geolocation) {
+      showToast("Geolocation is not supported by your browser.", "error");
       return;
     }
 
-    const msg = generateWhatsAppMessage(formData, orderType);
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(msg).then(() => {
-        showToast("Order message copied to clipboard!", "info");
-      }).catch(() => {
-        copyFallback(msg);
-      });
-    } else {
-      copyFallback(msg);
-    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setCoords({ latitude, longitude });
+        setLocating(false);
+        showToast(t("gps_success"), "success");
+
+        // Attempt reverse geocoding via Nominatim
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+            { headers: { "Accept-Language": "en" } }
+          );
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.address) {
+              const road = data.address.road || data.address.suburb || data.address.neighbourhood || "";
+              const city = data.address.city || data.address.town || data.address.state_district || "";
+              const post = data.address.postcode || "";
+
+              setFormData((prev) => ({
+                ...prev,
+                address: prev.address ? prev.address : `${road}${road && city ? ", " : ""}${city}`,
+                pincode: prev.pincode ? prev.pincode : post
+              }));
+            }
+          }
+        } catch (e) {
+          // If network fetch fails, coordinates are still stored for delivery map link
+        }
+      },
+      (err) => {
+        setLocating(false);
+        showToast("Location permission denied or unavailable.", "info");
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
   };
 
-  const copyFallback = (text) => {
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    document.body.removeChild(ta);
-    showToast("Order message copied to clipboard!", "info");
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+
+    if (!formData.fullName.trim()) {
+      showToast("Please enter your name", "error");
+      return;
+    }
+
+    const cleanPhone = formData.phone.replace(/\D/g, "");
+    if (cleanPhone.length < 10) {
+      showToast("Please enter a valid 10-digit mobile number", "error");
+      return;
+    }
+
+    if (orderType === "delivery") {
+      if (!isDeliveryEligible) {
+        showToast(
+          `Home delivery requires min. Rs. ${deliveryMinimum} order (Add Rs. ${remainingForDelivery} more or choose Store Pickup)`,
+          "error"
+        );
+        return;
+      }
+
+      if (!formData.address.trim()) {
+        showToast("Please enter your street address or colony", "error");
+        return;
+      }
+
+      if (!formData.pincode.trim()) {
+        showToast("Please enter your delivery pincode", "error");
+        return;
+      }
+    }
+
+    setSubmitting(true);
+
+    try {
+      // 1. Create order and get ticket
+      const newOrder = createOrder(formData, orderType, coords);
+
+      // 2. Build WhatsApp URL
+      const waUrl = generateWhatsAppUrl(newOrder);
+
+      showToast(`Order Ticket #${newOrder.orderId} Created!`, "success");
+
+      setTimeout(() => {
+        setSubmitting(false);
+        window.open(waUrl, "_blank", "noopener,noreferrer");
+      }, 500);
+    } catch (err) {
+      console.error(err);
+      setSubmitting(false);
+      showToast("Failed creating order. Please contact dispatch directly.", "error");
+    }
   };
 
   return (
     <div
-      className={`modal-overlay ${isCheckoutOpen ? "open" : ""}`}
+      className="modal-backdrop"
       onClick={(e) => {
         if (e.target === e.currentTarget) setIsCheckoutOpen(false);
       }}
+      role="dialog"
+      aria-modal="true"
     >
       <div className="modal-window">
         {/* Modal Header */}
         <div className="modal-header">
           <div>
             <h3>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-              <span>Delivery Details & WhatsApp Checkout</span>
+              <IconMapPin size={18} style={{ color: "#0f766e" }} />
+              <span>{t("checkout_title")}</span>
             </h3>
-            <p>Order connects directly to {settings.storeName} WhatsApp (+91 {settings.whatsappNumber})</p>
+            <p>Direct Booking with Majin Studios Dispatch (+91 {settings.whatsappNumber})</p>
           </div>
           <button
             className="btn-close-drawer"
             onClick={() => setIsCheckoutOpen(false)}
             title="Close modal"
           >
-            ✕
+            <IconX size={18} />
           </button>
         </div>
 
         {/* Modal Body */}
         <div className="modal-body">
-          {/* Order Type Toggle */}
+          {/* Order Type Toggle: Home Delivery vs Store Pickup */}
           <div className="delivery-order-type-picker">
             <label
               className={`type-radio-card ${orderType === "delivery" ? "active" : ""}`}
-              onClick={() => setOrderType("delivery")}
+              onClick={() => {
+                if (isDeliveryEligible) {
+                  setOrderType("delivery");
+                } else {
+                  showToast(t("delivery_min_alert", { diff: remainingForDelivery }), "info");
+                  setOrderType("delivery");
+                }
+              }}
             >
               <input
                 type="radio"
@@ -161,8 +208,13 @@ export default function CheckoutModal() {
                 onChange={() => setOrderType("delivery")}
               />
               <div className="type-card-info">
-                <h5>🚚 Doorstep Home Delivery</h5>
-                <p>Delivery available for orders above ₹{deliveryMinimum}</p>
+                <h5>
+                  <IconTruck size={16} className="inline-icon" />
+                  <span>Home Delivery</span>
+                </h5>
+                <p>
+                  {isDeliveryEligible ? "Free Delivery Unlocked!" : `Min order Rs. ${deliveryMinimum}`}
+                </p>
               </div>
             </label>
 
@@ -178,44 +230,48 @@ export default function CheckoutModal() {
                 onChange={() => setOrderType("pickup")}
               />
               <div className="type-card-info">
-                <h5>🏬 Store Self-Pickup</h5>
-                <p>Pick up directly at depot (No minimum order)</p>
+                <h5>
+                  <IconStore size={16} className="inline-icon" />
+                  <span>Store Self-Pickup</span>
+                </h5>
+                <p>100% Free (No minimum order)</p>
               </div>
             </label>
           </div>
 
-          {/* Threshold Alert for delivery */}
+          {/* Alert if Delivery is selected but subtotal < 500 */}
           {orderType === "delivery" && !isDeliveryEligible && (
             <div className="checkout-threshold-warning">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
               <div>
-                <strong>Home Delivery Note:</strong> Your subtotal is <strong>₹{subtotal}</strong>. Our doorstep delivery minimum is <strong>₹{deliveryMinimum}</strong> (₹{remainingForDelivery} remaining). You can add items or select Store Pickup.
+                <strong>Minimum Order Notice:</strong> Subtotal is <strong>Rs. {subtotal}</strong>. Home delivery is available for orders above <strong>Rs. {deliveryMinimum}</strong> (Add Rs. {remainingForDelivery} more). Or select <strong>Store Self-Pickup</strong> to proceed now.
               </div>
             </div>
           )}
 
-          {/* Form Fields */}
-          <form onSubmit={(e) => e.preventDefault()}>
+          {/* Form */}
+          <form onSubmit={handleFormSubmit}>
             <div className="form-grid">
+              {/* Customer Name */}
               <div className="form-group">
-                <label htmlFor="fullName">Full Name <span className="req">*</span></label>
+                <label htmlFor="fullName">
+                  {t("name_label")} <span className="req">*</span>
+                </label>
                 <input
                   type="text"
                   id="fullName"
                   className="form-control"
-                  placeholder="e.g. Rajesh Kumar"
+                  placeholder="e.g. Ramesh Kumar"
                   value={formData.fullName}
                   onChange={handleInputChange}
                   required
                 />
               </div>
 
+              {/* Mobile Phone */}
               <div className="form-group">
-                <label htmlFor="phone">Mobile / WhatsApp Number <span className="req">*</span></label>
+                <label htmlFor="phone">
+                  {t("phone_label")} <span className="req">*</span>
+                </label>
                 <input
                   type="tel"
                   id="phone"
@@ -223,137 +279,181 @@ export default function CheckoutModal() {
                   placeholder="10-digit mobile number"
                   value={formData.phone}
                   onChange={handleInputChange}
+                  maxLength={10}
                   required
                 />
               </div>
 
-              {orderType === "delivery" && (
+              {/* Home Delivery Specific Fields */}
+              {orderType === "delivery" ? (
                 <>
-                  <div className="form-group full-width">
-                    <label htmlFor="address">Delivery Address (House/Flat, Street, Area) <span className="req">*</span></label>
-                    <textarea
-                      id="address"
-                      className="form-control"
-                      placeholder="e.g. Flat 302, Sai Residency, 4th Cross Road"
-                      rows="2"
-                      value={formData.address}
-                      onChange={handleInputChange}
-                      required
-                    ></textarea>
+                  {/* GPS Auto-Fill Button */}
+                  <div className="form-group full-width" style={{ marginTop: "4px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <button
+                        type="button"
+                        onClick={handleGpsAutoFill}
+                        disabled={locating}
+                        className="btn-outline"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          padding: "6px 12px",
+                          fontSize: "0.82rem",
+                          color: "#0f766e",
+                          borderColor: "#0f766e"
+                        }}
+                      >
+                        <IconNavigation size={14} />
+                        <span>{locating ? t("gps_locating") : t("gps_button")}</span>
+                      </button>
+
+                      {coords && (
+                        <span style={{ fontSize: "0.78rem", color: "#16a34a", display: "flex", alignItems: "center", gap: "4px" }}>
+                          <IconCheck size={14} /> GPS Pin Attached
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="landmark">Nearby Landmark</label>
+                    <label htmlFor="doorNo">{t("door_flat_label")}</label>
+                    <input
+                      type="text"
+                      id="doorNo"
+                      className="form-control"
+                      placeholder="e.g. Flat 302, D-Block"
+                      value={formData.doorNo}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="floor">{t("floor_label")}</label>
+                    <input
+                      type="text"
+                      id="floor"
+                      className="form-control"
+                      placeholder="e.g. 3rd Floor / Ground Floor"
+                      value={formData.floor}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label htmlFor="address">
+                      {t("street_label")} <span className="req">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="address"
+                      className="form-control"
+                      placeholder="e.g. Station Road, Near Main Market"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      required={orderType === "delivery"}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="landmark">{t("landmark_label")}</label>
                     <input
                       type="text"
                       id="landmark"
                       className="form-control"
-                      placeholder="e.g. Near Water Tank or Temple"
+                      placeholder="e.g. Opp. Water Tank"
                       value={formData.landmark}
                       onChange={handleInputChange}
                     />
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="pincode">Pincode / Area Code <span className="req">*</span></label>
+                    <label htmlFor="pincode">
+                      {t("pincode_label")} <span className="req">*</span>
+                    </label>
                     <input
                       type="text"
                       id="pincode"
                       className="form-control"
                       placeholder="e.g. 500001"
-                      maxLength="6"
                       value={formData.pincode}
                       onChange={handleInputChange}
-                      required
+                      maxLength={6}
+                      required={orderType === "delivery"}
                     />
                   </div>
                 </>
+              ) : (
+                /* Store Pickup Details */
+                <div
+                  className="form-group full-width"
+                  style={{
+                    background: "#f8fafc",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "6px",
+                    padding: "14px",
+                    marginTop: "8px"
+                  }}
+                >
+                  <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                    <IconStore size={20} style={{ color: "#0f766e", marginTop: "2px" }} />
+                    <div>
+                      <strong style={{ fontSize: "0.9rem", color: "#09090b" }}>
+                        {t("store_address_title")}
+                      </strong>
+                      <p style={{ margin: "4px 0 0", fontSize: "0.82rem", color: "#64748b" }}>
+                        {t("store_address_detail")}
+                      </p>
+                      <small style={{ color: "#16a34a", fontWeight: 600, display: "block", marginTop: "4px" }}>
+                        No delivery fee. Collect directly at counter with Ticket ID.
+                      </small>
+                    </div>
+                  </div>
+                </div>
               )}
+            </div>
 
-              <div className="form-group">
-                <label htmlFor="timeSlot">Preferred Time Slot</label>
-                <select
-                  id="timeSlot"
-                  className="form-control"
-                  value={formData.timeSlot}
-                  onChange={handleInputChange}
-                >
-                  <option value="Anytime Today">Anytime Today (Standard)</option>
-                  <option value="Morning (9 AM - 1 PM)">Morning (9 AM - 1 PM)</option>
-                  <option value="Afternoon (1 PM - 5 PM)">Afternoon (1 PM - 5 PM)</option>
-                  <option value="Evening (5 PM - 8 PM)">Evening (5 PM - 8 PM)</option>
-                  <option value="Tomorrow Morning">Tomorrow Morning</option>
-                </select>
+            {/* Price & Submit Bar */}
+            <div
+              style={{
+                borderTop: "1px solid #e2e8f0",
+                marginTop: "20px",
+                paddingTop: "16px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center"
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "0.78rem", color: "#64748b" }}>Payable on Delivery / Pickup</div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#0f766e" }}>
+                  Rs. {subtotal}
+                </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="paymentMethod">Payment Preference</label>
-                <select
-                  id="paymentMethod"
-                  className="form-control"
-                  value={formData.paymentMethod}
-                  onChange={handleInputChange}
-                >
-                  <option value="Cash on Delivery (COD)">Cash on Delivery (COD)</option>
-                  <option value="UPI on Delivery (GPay / PhonePe / Paytm)">UPI on Delivery (GPay / PhonePe / Paytm)</option>
-                </select>
-              </div>
-
-              <div className="form-group full-width">
-                <label htmlFor="notes">Special Instructions (Optional)</label>
-                <input
-                  type="text"
-                  id="notes"
-                  className="form-control"
-                  placeholder="e.g. Call before coming, keep acid bottle upright"
-                  value={formData.notes}
-                  onChange={handleInputChange}
-                />
-              </div>
+              <button
+                type="submit"
+                disabled={submitting || (orderType === "delivery" && !isDeliveryEligible)}
+                className="btn-checkout-drawer"
+                style={{
+                  background: orderType === "delivery" && !isDeliveryEligible ? "#94a3b8" : "#16a34a",
+                  cursor: orderType === "delivery" && !isDeliveryEligible ? "not-allowed" : "pointer",
+                  color: "#ffffff",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "10px 18px",
+                  borderRadius: "6px",
+                  border: "none",
+                  fontWeight: 600
+                }}
+              >
+                <IconWhatsApp size={16} />
+                <span>{submitting ? "Booking..." : t("btn_place_order")}</span>
+              </button>
             </div>
           </form>
-
-          {/* Mini Summary */}
-          <div className="modal-cart-mini-summary">
-            <div className="head">
-              <span>Order Summary ({totalItems} items)</span>
-              <span>₹{subtotal}</span>
-            </div>
-            <div className="modal-cart-items-preview">
-              {cart.map((item, idx) => (
-                <div key={idx}>
-                  {idx + 1}. {item.name} ({item.unit}) × {item.quantity} = ₹{item.price * item.quantity}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Modal Footer */}
-        <div className="modal-footer">
-          <button
-            type="button"
-            className="btn-copy-msg"
-            onClick={handleCopyMessage}
-            title="Copy order message to clipboard"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-            </svg>
-            <span>Copy Text</span>
-          </button>
-
-          <button
-            type="button"
-            className="btn-send-whatsapp"
-            onClick={handleSendWhatsApp}
-          >
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2M12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15C10.56 20.15 9.11 19.76 7.85 19L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 14.99 3.8 13.47 3.8 11.91C3.81 7.37 7.5 3.67 12.05 3.67M9.53 7.55C9.33 7.55 9 7.62 8.71 7.94C8.42 8.25 7.62 9 7.62 10.5C7.62 12 8.73 13.45 8.89 13.66C9.05 13.86 11.05 16.95 14.12 18.28C14.85 18.6 15.42 18.78 15.86 18.93C16.6 19.16 17.27 19.13 17.81 19.05C18.41 18.96 19.65 18.3 19.91 17.57C20.17 16.84 20.17 16.22 20.09 16.09C20.01 15.96 19.81 15.88 19.51 15.73C19.22 15.58 17.78 14.87 17.51 14.77C17.24 14.67 17.05 14.62 16.85 14.93C16.65 15.23 16.08 15.91 15.9 16.11C15.73 16.32 15.55 16.34 15.26 16.2C14.96 16.05 14.01 15.74 12.89 14.74C12.02 13.96 11.43 13 11.26 12.7C11.09 12.41 11.24 12.25 11.39 12.1C11.52 11.97 11.68 11.76 11.83 11.58C11.98 11.41 12.03 11.28 12.13 11.08C12.23 10.87 12.18 10.7 12.11 10.55C12.03 10.4 11.45 8.97 11.21 8.39C10.97 7.82 10.73 7.9 10.55 7.9H10.15C9.95 7.9 9.68 7.82 9.53 7.55Z" />
-            </svg>
-            <span>Send Order to WhatsApp ({settings.whatsappNumber})</span>
-          </button>
         </div>
       </div>
     </div>

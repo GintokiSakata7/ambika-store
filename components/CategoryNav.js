@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useStore } from "../context/StoreContext";
+import { CategoryIconRenderer } from "./Icons";
 
 export default function CategoryNav({ activeCategory, onSelectCategory }) {
   const { categories } = useStore();
@@ -14,7 +15,7 @@ export default function CategoryNav({ activeCategory, onSelectCategory }) {
           className={`cat-chip ${activeCategory === cat.id ? "active" : ""}`}
           onClick={() => onSelectCategory(cat.id)}
         >
-          {cat.icon && <span style={{ marginRight: "6px" }}>{cat.icon}</span>}
+          <CategoryIconRenderer categoryId={cat.id} size={15} />
           <span>{cat.label}</span>
         </button>
       ))}

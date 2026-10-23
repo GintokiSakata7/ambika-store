@@ -2,9 +2,10 @@
 
 import React, { useState } from "react";
 import { useStore } from "../context/StoreContext";
+import { IconEye, IconPlus, IconMinus, IconShieldCheck } from "./Icons";
 
-export default function ProductCard({ product, onEditClick }) {
-  const { addToCart, setActiveProductModal } = useStore();
+export default function ProductCard({ product }) {
+  const { addToCart, setActiveProductModal, t } = useStore();
   const [qty, setQty] = useState(1);
 
   const savings = Math.max(0, product.mrp - product.price);
@@ -41,10 +42,7 @@ export default function ProductCard({ product, onEditClick }) {
           onClick={() => setActiveProductModal(product)}
           title="Quick view product details"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
+          <IconEye size={16} />
         </button>
       </div>
 
@@ -60,7 +58,7 @@ export default function ProductCard({ product, onEditClick }) {
 
         {product.potency && (
           <div className="product-potency-spec">
-            <span>🛡️</span>
+            <IconShieldCheck size={13} style={{ color: "#0f766e" }} />
             <span>{product.potency}</span>
           </div>
         )}
@@ -81,19 +79,17 @@ export default function ProductCard({ product, onEditClick }) {
           <div className="product-actions-row">
             <div className="qty-counter">
               <button className="qty-btn" onClick={handleDecrease} title="Decrease quantity">
-                -
+                <IconMinus size={11} />
               </button>
               <span className="qty-display">{qty}</span>
               <button className="qty-btn" onClick={handleIncrease} title="Increase quantity">
-                +
+                <IconPlus size={11} />
               </button>
             </div>
 
             <button className="btn-add-cart" onClick={handleAdd}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-              <span>Add</span>
+              <IconPlus size={14} />
+              <span>{t("btn_add")}</span>
             </button>
           </div>
         </div>

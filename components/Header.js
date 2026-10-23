@@ -2,6 +2,19 @@
 
 import React from "react";
 import { useStore } from "../context/StoreContext";
+import {
+  IconTruck,
+  IconWhatsApp,
+  IconLock,
+  IconShield,
+  IconShoppingBag,
+  IconSearch,
+  IconX,
+  IconSparkles,
+  IconGlobe,
+  IconHistory,
+  IconBuilding
+} from "./Icons";
 
 export default function Header({ searchQuery, setSearchQuery }) {
   const {
@@ -13,7 +26,13 @@ export default function Header({ searchQuery, setSearchQuery }) {
     currentUser,
     openAdminLogin,
     logout,
-    setIsCartOpen
+    setIsCartOpen,
+    setIsTrackOrderOpen,
+    lang,
+    setLang,
+    catalogMode,
+    setCatalogMode,
+    t
   } = useStore();
 
   const rawNumber = settings.whatsappNumber.replace(/\D/g, "");
@@ -21,28 +40,55 @@ export default function Header({ searchQuery, setSearchQuery }) {
 
   return (
     <>
-      {/* Clean Announcement Top Bar */}
+      {/* Clean Top Bar with Delivery Notice & Language Switcher */}
       <aside className="top-bar" aria-label="Store announcement">
         <div className="container top-bar-content">
           <div className="top-bar-notice">
-            <span className="badge-tag">Fast Delivery</span>
-            <span>
-              🚚 <strong>{settings.deliveryBannerNotice}</strong>
+            <span className="badge-tag">Direct Supply</span>
+            <span className="top-bar-notice-text">
+              <IconTruck size={14} className="inline-icon" />
+              <span>{t("announcement")}</span>
             </span>
           </div>
 
           <div className="top-bar-actions">
+            {/* Language Selector: English, Telugu, Hindi */}
+            <div className="lang-switcher">
+              <IconGlobe size={13} style={{ color: "#94a3b8" }} />
+              <button
+                className={`lang-btn ${lang === "en" ? "active" : ""}`}
+                onClick={() => setLang("en")}
+                title="Switch to English"
+              >
+                ENG
+              </button>
+              <span className="lang-sep">|</span>
+              <button
+                className={`lang-btn ${lang === "te" ? "active" : ""}`}
+                onClick={() => setLang("te")}
+                title="తెలుగు భాషకు మార్చండి"
+              >
+                తెలుగు
+              </button>
+              <span className="lang-sep">|</span>
+              <button
+                className={`lang-btn ${lang === "hi" ? "active" : ""}`}
+                onClick={() => setLang("hi")}
+                title="हिंदी में बदलें"
+              >
+                हिंदी
+              </button>
+            </div>
+
             <a
-              href={`https://wa.me/${cleanNumber}?text=Hi%20${encodeURIComponent(settings.storeName)}%2C%20I%20have%20an%20inquiry%20regarding%20house%20cleaning%20products.`}
+              href={`https://wa.me/${cleanNumber}?text=Hi%20${encodeURIComponent(settings.storeName)}%2C%20I%20have%20an%20inquiry%20regarding%20cleaning%20products.`}
               target="_blank"
               rel="noopener noreferrer"
               className="top-link"
               title="Direct WhatsApp Support"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2M12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15C10.56 20.15 9.11 19.76 7.85 19L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 14.99 3.8 13.47 3.8 11.91C3.81 7.37 7.5 3.67 12.05 3.67M9.53 7.55C9.33 7.55 9 7.62 8.71 7.94C8.42 8.25 7.62 9 7.62 10.5C7.62 12 8.73 13.45 8.89 13.66C9.05 13.86 11.05 16.95 14.12 18.28C14.85 18.6 15.42 18.78 15.86 18.93C16.6 19.16 17.27 19.13 17.81 19.05C18.41 18.96 19.65 18.3 19.91 17.57C20.17 16.84 20.17 16.22 20.09 16.09C20.01 15.96 19.81 15.88 19.51 15.73C19.22 15.58 17.78 14.87 17.51 14.77C17.24 14.67 17.05 14.62 16.85 14.93C16.65 15.23 16.08 15.91 15.9 16.11C15.73 16.32 15.55 16.34 15.26 16.2C14.96 16.05 14.01 15.74 12.89 14.74C12.02 13.96 11.43 13 11.26 12.7C11.09 12.41 11.24 12.25 11.39 12.1C11.52 11.97 11.68 11.76 11.83 11.58C11.98 11.41 12.03 11.28 12.13 11.08C12.23 10.87 12.18 10.7 12.11 10.55C12.03 10.4 11.45 8.97 11.21 8.39C10.97 7.82 10.73 7.9 10.55 7.9H10.15C9.95 7.9 9.68 7.82 9.53 7.55Z" />
-              </svg>
-              <span>WhatsApp: {settings.whatsappNumber}</span>
+              <IconWhatsApp size={13} />
+              <span>WA: {settings.whatsappNumber}</span>
             </a>
           </div>
         </div>
@@ -55,20 +101,18 @@ export default function Header({ searchQuery, setSearchQuery }) {
           <div
             className="brand-wrapper"
             style={{ cursor: "pointer" }}
-            onClick={() => setCurrentRole("customer")}
+            onClick={() => {
+              setCurrentRole("customer");
+              setCatalogMode("retail");
+            }}
           >
             <div className="brand-logo-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" />
-              </svg>
+              <IconSparkles size={20} />
             </div>
             <div className="brand-text">
               <h1>{settings.storeName}</h1>
               <div className="brand-subtitle">
-                House Cleaning Chemicals &amp; Supplies
-                {settings.companyName && settings.companyName !== settings.storeName && (
-                  <> • <span className="parent-tag">{settings.companyName}</span></>
-                )}
+                Cleaning Chemicals &amp; Essentials
               </div>
             </div>
           </div>
@@ -76,13 +120,10 @@ export default function Header({ searchQuery, setSearchQuery }) {
           {/* Search Input (Customer Mode) */}
           <div className="header-search">
             <div className="search-input-wrapper">
-              <svg className="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.35-4.35"></path>
-              </svg>
+              <IconSearch size={16} className="search-icon" />
               <input
                 type="text"
-                placeholder="Search phenyl, acid, broom, naphthalene, bleach..."
+                placeholder={t("search_placeholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 autoComplete="off"
@@ -93,7 +134,7 @@ export default function Header({ searchQuery, setSearchQuery }) {
                   onClick={() => setSearchQuery("")}
                   title="Clear search"
                 >
-                  ✕
+                  <IconX size={14} />
                 </button>
               )}
             </div>
@@ -101,6 +142,35 @@ export default function Header({ searchQuery, setSearchQuery }) {
 
           {/* Header Right Action Buttons */}
           <div className="header-actions">
+            {/* Mode Switcher: Retail vs Wholesale */}
+            <div className="mode-toggle-pill">
+              <button
+                className={`mode-btn ${catalogMode === "retail" ? "active" : ""}`}
+                onClick={() => setCatalogMode("retail")}
+                title="Retail Products for Home & Small Office"
+              >
+                Retail
+              </button>
+              <button
+                className={`mode-btn ${catalogMode === "wholesale" ? "active" : ""}`}
+                onClick={() => setCatalogMode("wholesale")}
+                title="Wholesale Supply for Shopkeepers & Bulk Buyers"
+              >
+                <IconBuilding size={12} style={{ marginRight: "3px" }} />
+                Wholesale
+              </button>
+            </div>
+
+            {/* Track Order Button */}
+            <button
+              onClick={() => setIsTrackOrderOpen(true)}
+              className="btn-track-header"
+              title="Track order status by Ticket ID"
+            >
+              <IconHistory size={14} />
+              <span>{t("nav_track")}</span>
+            </button>
+
             {/* Admin Access Button */}
             {currentRole === "admin" ? (
               <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
@@ -109,7 +179,8 @@ export default function Header({ searchQuery, setSearchQuery }) {
                   className="btn-admin-header active"
                   title="Go to Admin Dashboard"
                 >
-                  🛡️ Dashboard
+                  <IconShield size={14} />
+                  <span>Dashboard</span>
                 </button>
                 <button
                   onClick={logout}
@@ -125,11 +196,8 @@ export default function Header({ searchQuery, setSearchQuery }) {
                 className="btn-admin-header"
                 title="Store Owner & Demo Admin Login"
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-                <span>Admin Login</span>
+                <IconLock size={14} />
+                <span>Admin</span>
               </button>
             )}
 
@@ -139,13 +207,9 @@ export default function Header({ searchQuery, setSearchQuery }) {
               onClick={() => setIsCartOpen(true)}
               title="Open shopping cart"
             >
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="8" cy="21" r="1"></circle>
-                <circle cx="19" cy="21" r="1"></circle>
-                <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
-              </svg>
+              <IconShoppingBag size={18} />
               <span className="cart-badge">{totalItems}</span>
-              <span className="cart-subtotal-pill">₹{subtotal}</span>
+              <span className="cart-subtotal-pill">Rs. {subtotal}</span>
             </button>
           </div>
         </div>

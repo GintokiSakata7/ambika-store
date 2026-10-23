@@ -1,7 +1,14 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { DEFAULT_PRODUCTS, DEFAULT_COMBOS, DEFAULT_SETTINGS, DEFAULT_CATEGORIES } from "../data/defaultProducts";
+import {
+  DEFAULT_PRODUCTS,
+  DEFAULT_COMBOS,
+  DEFAULT_SETTINGS,
+  DEFAULT_CATEGORIES,
+  DEFAULT_WHOLESALE_PRODUCTS
+} from "../data/defaultProducts";
+import { TRANSLATIONS } from "../data/translations";
 
 const StoreContext = createContext(null);
 
@@ -9,24 +16,51 @@ export function StoreProvider({ children }) {
   // State initialization with hydration guard
   const [mounted, setMounted] = useState(false);
   const [products, setProducts] = useState(DEFAULT_PRODUCTS);
+  const [wholesaleProducts, setWholesaleProducts] = useState(DEFAULT_WHOLESALE_PRODUCTS);
   const [combos, setCombos] = useState(DEFAULT_COMBOS);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
   const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState([]);
-  
+
+  // Language & Mode
+  const [lang, setLangState] = useState("en"); // "en" | "te" | "hi"
+  const [catalogMode, setCatalogMode] = useState("retail"); // "retail" | "wholesale"
+
   // Role & Auth state
   const [currentRole, setCurrentRoleState] = useState("customer"); // "customer" | "admin"
   const [currentUser, setCurrentUser] = useState(null); // { name, email, role }
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalTab, setAuthModalTab] = useState("admin"); // "admin" | "customer"
-  
+
   // Modals & Drawers state
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isTrackOrderOpen, setIsTrackOrderOpen] = useState(false);
+  const [isOrderSuccessOpen, setIsOrderSuccessOpen] = useState(false);
+  const [lastPlacedOrder, setLastPlacedOrder] = useState(null);
   const [activeProductModal, setActiveProductModal] = useState(null);
   const [toasts, setToasts] = useState([]);
+
+  // Translation helper
+  const t = (key, params = {}) => {
+    const dict = TRANSLATIONS[lang] || TRANSLATIONS.en;
+    let text = dict[key] || TRANSLATIONS.en[key] || key;
+    if (typeof text === "string") {
+      Object.keys(params).forEach((k) => {
+        text = text.replace(new RegExp(`\\{${k}\\}`, "g"), params[k]);
+      });
+    }
+    return text;
+  };
+
+  const setLang = (newLang) => {
+    setLangState(newLang);
+    try {
+      localStorage.setItem("majin_studios_lang", newLang);
+    } catch (e) {}
+  };
 
   const setCurrentRole = (role) => {
     setCurrentRoleState(role);
@@ -60,7 +94,7 @@ export function StoreProvider({ children }) {
       localStorage.setItem("majin_studios_user", JSON.stringify(user));
       localStorage.setItem("majin_studios_role", "admin");
     } catch (e) {}
-    showToast("Signed in as Admin! Welcome to Store Management.", "success");
+    showToast("Signed in as Admin! Store controls unlocked.", "success");
     return { success: true };
   };
 
@@ -77,7 +111,7 @@ export function StoreProvider({ children }) {
       localStorage.setItem("majin_studios_user", JSON.stringify(user));
       localStorage.setItem("majin_studios_role", "customer");
     } catch (e) {}
-    showToast(`Welcome ${user.name}! You can browse and book items.`, "success");
+    showToast(`Welcome ${user.name}!`, "success");
     return { success: true };
   };
 
@@ -95,48 +129,36 @@ export function StoreProvider({ children }) {
   useEffect(() => {
     setMounted(true);
     try {
-      const savedProducts = localStorage.getItem("majin_studios_products_v1") || localStorage.getItem("margin_chemicals_products_v2");
+      const savedLang = localStorage.getItem("majin_studios_lang");
+      if (savedLang && ["en", "te", "hi"].includes(savedLang)) {
+        setLangState(savedLang);
+      }
+
+      const savedProducts = localStorage.getItem("majin_studios_products_v2");
       if (savedProducts) {
-        const parsedProducts = JSON.parse(savedProducts);
-        const sanitizedProducts = parsedProducts.map(p => ({
-          ...p,
-          description: p.description ? p.description.replace(/Margin Studio/gi, "Majin Studios") : p.description
-        }));
-        setProducts(sanitizedProducts);
+        setProducts(JSON.parse(savedProducts));
       }
 
-      const savedSettings = localStorage.getItem("majin_studios_settings_v1") || localStorage.getItem("margin_chemicals_settings_v2");
-      if (savedSettings) {
-        const parsedSettings = JSON.parse(savedSettings);
-        if (!parsedSettings.storeName || parsedSettings.storeName.includes("Margin")) {
-          parsedSettings.storeName = "Majin Studios";
-        }
-        if (!parsedSettings.companyName || parsedSettings.companyName.includes("Margin")) {
-          parsedSettings.companyName = "Majin Studios";
-        }
-        if (parsedSettings.deliveryBannerNotice && parsedSettings.deliveryBannerNotice.includes("Margin")) {
-          parsedSettings.deliveryBannerNotice = parsedSettings.deliveryBannerNotice.replace(/Margin Studios/gi, "Majin Studios").replace(/Margin Studio/gi, "Majin Studios");
-        }
-        setSettings(parsedSettings);
+      const savedWholesale = localStorage.getItem("majin_studios_wholesale_v1");
+      if (savedWholesale) {
+        setWholesaleProducts(JSON.parse(savedWholesale));
       }
 
-      const savedCategories = localStorage.getItem("majin_studios_categories_v1");
+      const savedCategories = localStorage.getItem("majin_studios_categories_v2");
       if (savedCategories) {
         setCategories(JSON.parse(savedCategories));
       }
 
-      const savedCart = localStorage.getItem("majin_studios_cart_v1") || localStorage.getItem("margin_chemicals_cart_v2");
+      const savedCart = localStorage.getItem("majin_studios_cart_v2");
       if (savedCart) setCart(JSON.parse(savedCart));
 
-      const savedOrders = localStorage.getItem("majin_studios_orders_v1") || localStorage.getItem("margin_chemicals_orders_v2");
+      const savedOrders = localStorage.getItem("majin_studios_orders_v2");
       if (savedOrders) setOrders(JSON.parse(savedOrders));
 
       const savedUser = localStorage.getItem("majin_studios_user");
-      if (savedUser) {
-        setCurrentUser(JSON.parse(savedUser));
-      }
+      if (savedUser) setCurrentUser(JSON.parse(savedUser));
 
-      const savedRole = localStorage.getItem("majin_studios_role") || localStorage.getItem("margin_demo_role");
+      const savedRole = localStorage.getItem("majin_studios_role");
       if (savedRole === "admin" || savedRole === "customer") {
         setCurrentRoleState(savedRole);
       }
@@ -149,46 +171,29 @@ export function StoreProvider({ children }) {
   useEffect(() => {
     if (!mounted) return;
     try {
-      localStorage.setItem("majin_studios_products_v1", JSON.stringify(products));
-    } catch (e) {
-      console.warn("Failed saving products to storage", e);
-    }
+      localStorage.setItem("majin_studios_products_v2", JSON.stringify(products));
+    } catch (e) {}
   }, [products, mounted]);
 
   useEffect(() => {
     if (!mounted) return;
     try {
-      localStorage.setItem("majin_studios_categories_v1", JSON.stringify(categories));
-    } catch (e) {
-      console.warn("Failed saving categories to storage", e);
-    }
+      localStorage.setItem("majin_studios_categories_v2", JSON.stringify(categories));
+    } catch (e) {}
   }, [categories, mounted]);
 
   useEffect(() => {
     if (!mounted) return;
     try {
-      localStorage.setItem("majin_studios_settings_v1", JSON.stringify(settings));
-    } catch (e) {
-      console.warn("Failed saving settings to storage", e);
-    }
-  }, [settings, mounted]);
-
-  useEffect(() => {
-    if (!mounted) return;
-    try {
-      localStorage.setItem("majin_studios_cart_v1", JSON.stringify(cart));
-    } catch (e) {
-      console.warn("Failed saving cart to storage", e);
-    }
+      localStorage.setItem("majin_studios_cart_v2", JSON.stringify(cart));
+    } catch (e) {}
   }, [cart, mounted]);
 
   useEffect(() => {
     if (!mounted) return;
     try {
-      localStorage.setItem("majin_studios_orders_v1", JSON.stringify(orders));
-    } catch (e) {
-      console.warn("Failed saving orders to storage", e);
-    }
+      localStorage.setItem("majin_studios_orders_v2", JSON.stringify(orders));
+    } catch (e) {}
   }, [orders, mounted]);
 
   // Toast Helper
@@ -219,10 +224,11 @@ export function StoreProvider({ children }) {
             id: product.id,
             name: product.name,
             price: Number(product.price),
-            mrp: Number(product.mrp),
+            mrp: Number(product.mrp || product.price),
             unit: product.unit,
             image: product.image,
             categoryName: product.categoryName,
+            isWholesale: !!product.isWholesale,
             quantity
           }
         ];
@@ -244,19 +250,19 @@ export function StoreProvider({ children }) {
           ...prev,
           {
             id: comboId,
-            name: "Bundle: " + combo.name,
+            name: "Kit: " + combo.name,
             price: Number(combo.price),
             mrp: Number(combo.mrp),
-            unit: "Complete Set (" + combo.items.length + " items)",
+            unit: "Bundle (" + combo.items.length + " items)",
             image: combo.image,
-            categoryName: "Combo Value Pack",
+            categoryName: "Combo Pack",
             quantity: 1,
             isCombo: true
           }
         ];
       }
     });
-    showToast(`Added "${combo.name}" to cart! Home delivery qualified.`);
+    showToast(`Added "${combo.name}" to cart!`);
     setIsCartOpen(true);
   };
 
@@ -276,7 +282,6 @@ export function StoreProvider({ children }) {
 
   const clearCart = () => {
     setCart([]);
-    showToast("Cart has been cleared", "info");
   };
 
   // Cart Calculations
@@ -287,6 +292,36 @@ export function StoreProvider({ children }) {
   const remainingForDelivery = Math.max(0, deliveryMinimum - subtotal);
   const deliveryProgressPercent = Math.min(100, Math.round((subtotal / deliveryMinimum) * 100));
 
+  // Smart Recommendations Engine
+  const getRecommendations = (activeProductId = null, limit = 4) => {
+    const cartIds = cart.map((item) => item.id);
+    const complements = {
+      phenyl: ["acids", "brooms", "powders"],
+      acids: ["accessories", "phenyl", "naphthalene"],
+      naphthalene: ["phenyl", "powders", "acids"],
+      powders: ["phenyl", "accessories", "brooms"],
+      brooms: ["accessories", "phenyl", "acids"],
+      accessories: ["phenyl", "acids", "powders"]
+    };
+
+    let targetCat = "phenyl";
+    if (activeProductId) {
+      const p = products.find((x) => x.id === activeProductId);
+      if (p) targetCat = p.category;
+    } else if (cart.length > 0) {
+      const firstInCart = products.find((x) => x.id === cart[0].id);
+      if (firstInCart) targetCat = firstInCart.category;
+    }
+
+    const preferredCats = complements[targetCat] || ["phenyl", "brooms", "acids"];
+    const matched = products.filter(
+      (p) => !cartIds.includes(p.id) && p.id !== activeProductId && preferredCats.includes(p.category)
+    );
+    const fallback = products.filter((p) => !cartIds.includes(p.id) && p.id !== activeProductId);
+
+    return [...matched, ...fallback].slice(0, limit);
+  };
+
   // Admin Product Edits
   const updateProduct = (id, updatedFields) => {
     setProducts((prev) =>
@@ -295,26 +330,11 @@ export function StoreProvider({ children }) {
           return {
             ...p,
             ...updatedFields,
-            price: Number(updatedFields.price || p.price),
-            mrp: Number(updatedFields.mrp || p.mrp)
+            price: Number(updatedFields.price !== undefined ? updatedFields.price : p.price),
+            mrp: Number(updatedFields.mrp !== undefined ? updatedFields.mrp : p.mrp)
           };
         }
         return p;
-      })
-    );
-    // Also update any matching product in current cart
-    setCart((prev) =>
-      prev.map((cItem) => {
-        if (cItem.id === id) {
-          return {
-            ...cItem,
-            name: updatedFields.name || cItem.name,
-            price: Number(updatedFields.price !== undefined ? updatedFields.price : cItem.price),
-            mrp: Number(updatedFields.mrp !== undefined ? updatedFields.mrp : cItem.mrp),
-            unit: updatedFields.unit || cItem.unit
-          };
-        }
-        return cItem;
       })
     );
     showToast("Product updated successfully!", "success");
@@ -332,7 +352,7 @@ export function StoreProvider({ children }) {
       stock: newProduct.stock || "In Stock"
     };
     setProducts((prev) => [productWithId, ...prev]);
-    showToast(`Added new product: ${productWithId.name}`, "success");
+    showToast(`Added product: ${productWithId.name}`, "success");
   };
 
   const deleteProduct = (id) => {
@@ -350,16 +370,16 @@ export function StoreProvider({ children }) {
     const cleanLabel = label.trim();
     const cleanId = (id || cleanLabel).toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-");
     if (categories.some((c) => c.id === cleanId)) {
-      showToast("A category with this identifier already exists", "error");
+      showToast("Category identifier already exists", "error");
       return false;
     }
     const newCat = {
       id: cleanId,
       label: cleanLabel,
-      icon: icon && icon.trim() ? icon.trim() : "🏷️"
+      icon: icon && icon.trim() ? icon.trim() : "package"
     };
     setCategories((prev) => [...prev, newCat]);
-    showToast(`Category "${cleanLabel}" added successfully!`, "success");
+    showToast(`Category "${cleanLabel}" added!`, "success");
     return true;
   };
 
@@ -370,7 +390,6 @@ export function StoreProvider({ children }) {
     }
     const target = categories.find((c) => c.id === categoryId);
     setCategories((prev) => prev.filter((c) => c.id !== categoryId));
-    // Reassign products to 'accessories' so they remain accessible
     setProducts((prev) =>
       prev.map((p) =>
         p.category === categoryId
@@ -391,20 +410,20 @@ export function StoreProvider({ children }) {
 
   const resetProductsToDefault = () => {
     setProducts(DEFAULT_PRODUCTS);
+    setWholesaleProducts(DEFAULT_WHOLESALE_PRODUCTS);
     setCombos(DEFAULT_COMBOS);
     setSettings(DEFAULT_SETTINGS);
     setCategories(DEFAULT_CATEGORIES);
-    showToast("Reset all products, categories, and settings to default!", "info");
+    showToast("Reset all products to default catalog!", "info");
   };
 
-  // Admin Settings Update
-  const updateSettings = (newSettings) => {
-    setSettings((prev) => ({ ...prev, ...newSettings }));
-    showToast("Store settings updated successfully!", "success");
+  // Clean Order Generator (Zero Emojis, Ticket ID Based)
+  const generateOrderTicketId = () => {
+    return "MS-" + Math.floor(10000 + Math.random() * 90000);
   };
 
-  // WhatsApp Order Generator
-  const generateWhatsAppMessage = (customerData, orderType = "delivery") => {
+  const generateWhatsAppMessage = (order) => {
+    const { orderId, customer, orderType, items, subtotal, coords } = order;
     const now = new Date();
     const dateFormatted = now.toLocaleDateString("en-IN", {
       day: "numeric",
@@ -417,94 +436,114 @@ export function StoreProvider({ children }) {
       hour12: true
     });
 
-    let msg = `✨ *NEW ORDER - ${settings.storeName.toUpperCase()}* ✨\n`;
-    msg += `_${settings.tagline} by ${settings.companyName}_\n`;
-    msg += `📅 *Date:* ${dateFormatted} at ${timeFormatted}\n`;
-    msg += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+    let msg = `[MAJIN STUDIOS - ORDER TICKET #${orderId}]\n`;
+    msg += `Direct Cleaning Chemicals & Supplies\n`;
+    msg += `Date: ${dateFormatted} | ${timeFormatted}\n`;
+    msg += `--------------------------------\n\n`;
 
-    msg += `🛒 *ORDERED ITEMS (${totalItems} units):*\n`;
-    cart.forEach((item, index) => {
+    msg += `ORDER ITEMS (${items.reduce((s, i) => s + i.quantity, 0)} units):\n`;
+    items.forEach((item, index) => {
       const itemTotal = item.price * item.quantity;
-      msg += `${index + 1}. *${item.name}*\n`;
-      msg += `   • Pack: ${item.unit}\n`;
-      msg += `   • Qty: ${item.quantity} × ₹${item.price} = *₹${itemTotal}*\n`;
+      msg += `${index + 1}. ${item.name}\n`;
+      msg += `   Pack: ${item.unit || "Unit"}\n`;
+      msg += `   Qty: ${item.quantity} x Rs. ${item.price} = Rs. ${itemTotal}\n`;
     });
 
-    msg += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    msg += `💰 *Subtotal:* ₹${subtotal}\n`;
+    msg += `\n--------------------------------\n`;
+    msg += `Subtotal: Rs. ${subtotal}\n`;
+    if (orderType === "delivery") {
+      msg += `Fulfilment: Home Delivery (Free above Rs. 500)\n`;
+    } else {
+      msg += `Fulfilment: Store Self-Pickup (Free, Majin Studios Depot)\n`;
+    }
+    msg += `Total Amount: Rs. ${subtotal}\n`;
+    msg += `--------------------------------\n\n`;
+
+    msg += `CUSTOMER DETAILS:\n`;
+    msg += `Name: ${customer.fullName || "Customer"}\n`;
+    msg += `Phone: ${customer.phone}\n`;
+    if (customer.altPhone) {
+      msg += `Alt Phone: ${customer.altPhone}\n`;
+    }
 
     if (orderType === "delivery") {
-      msg += `🚚 *Order Method:* Doorstep Home Delivery\n`;
-      msg += `✅ *Delivery Criteria:* ${isDeliveryEligible ? `Qualified (Above ₹${deliveryMinimum})` : `Special Request (< ₹${deliveryMinimum})`}\n`;
+      if (customer.doorNo) msg += `Door/Flat No: ${customer.doorNo}\n`;
+      if (customer.floor) msg += `Floor: ${customer.floor}\n`;
+      msg += `Address: ${customer.address}\n`;
+      if (customer.landmark) msg += `Landmark: ${customer.landmark}\n`;
+      if (customer.pincode) msg += `Pincode: ${customer.pincode}\n`;
+      if (coords && coords.latitude && coords.longitude) {
+        msg += `GPS Location: https://maps.google.com/?q=${coords.latitude},${coords.longitude}\n`;
+      }
     } else {
-      msg += `🏬 *Order Method:* Store Pickup at ${settings.companyName} Depot\n`;
+      msg += `Pickup: Customer will collect at Depot.\n`;
     }
 
-    msg += `💳 *Preferred Payment:* ${customerData.paymentMethod || "Cash on Delivery (COD)"}\n`;
-    msg += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-
-    msg += `👤 *CUSTOMER & DELIVERY ADDRESS:*\n`;
-    msg += `• *Full Name:* ${customerData.fullName || "Not provided"}\n`;
-    msg += `• *Mobile Phone:* ${customerData.phone || "Not provided"}\n`;
-    if (customerData.altPhone) {
-      msg += `• *Alternate WhatsApp:* ${customerData.altPhone}\n`;
-    }
-    if (orderType === "delivery") {
-      msg += `• *Delivery Address:* ${customerData.address || "Not provided"}\n`;
-      msg += `• *Landmark:* ${customerData.landmark || "Not specified"}\n`;
-      msg += `• *Pincode / Area:* ${customerData.pincode || "Not specified"}\n`;
-      msg += `• *Preferred Slot:* ${customerData.timeSlot || "Anytime today"}\n`;
-    } else {
-      msg += `• *Pickup Time:* ${customerData.timeSlot || "Within business hours"}\n`;
+    if (customer.notes) {
+      msg += `Notes: ${customer.notes}\n`;
     }
 
-    if (customerData.notes) {
-      msg += `• *Special Notes:* ${customerData.notes}\n`;
-    }
-
-    msg += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    msg += `🙏 *Please confirm order availability and dispatch time. Thank you!*`;
+    msg += `\n--------------------------------\n`;
+    msg += `Track this order anytime with Ticket ID #${orderId}.\n`;
+    msg += `Please confirm dispatch / pickup readiness. Thank you!`;
 
     return msg;
   };
 
-  const generateWhatsAppUrl = (customerData, orderType = "delivery") => {
+  const generateWhatsAppUrl = (order) => {
     const rawNumber = settings.whatsappNumber.replace(/\D/g, "");
     const cleanNumber = rawNumber.startsWith("91") ? rawNumber : "91" + rawNumber;
-    const msg = generateWhatsAppMessage(customerData, orderType);
+    const msg = generateWhatsAppMessage(order);
     return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(msg)}`;
   };
 
-  const recordDemoOrder = (customerData, orderType = "delivery") => {
+  // Create & Register Order
+  const createOrder = (customerData, orderType = "delivery", coords = null) => {
+    const orderId = generateOrderTicketId();
     const newOrder = {
-      orderId: "ORD-" + Math.floor(100000 + Math.random() * 900000),
+      orderId,
       date: new Date().toLocaleString("en-IN"),
       customer: customerData,
       orderType,
       items: [...cart],
       totalItems,
       subtotal,
-      status: "Dispatched via WhatsApp"
+      deliveryFee: 0,
+      total: subtotal,
+      coords,
+      status: "Placed" // "Placed" | "Confirmed & Packing" | "Ready for Pickup / Out for Delivery" | "Delivered"
     };
+
     setOrders((prev) => [newOrder, ...prev]);
+    setLastPlacedOrder(newOrder);
+    setIsCheckoutOpen(false);
+    clearCart();
+    setIsOrderSuccessOpen(true);
+
+    return newOrder;
   };
 
   const updateOrderStatus = (orderId, newStatus) => {
     setOrders((prev) =>
       prev.map((ord) => (ord.orderId === orderId ? { ...ord, status: newStatus } : ord))
     );
-    showToast(`Order ${orderId} marked as ${newStatus}`, "info");
+    showToast(`Order #${orderId} marked as ${newStatus}`, "info");
   };
 
   const deleteOrder = (orderId) => {
     setOrders((prev) => prev.filter((ord) => ord.orderId !== orderId));
-    showToast(`Order ${orderId} removed`, "info");
+    showToast(`Order #${orderId} removed`, "info");
   };
 
   return (
     <StoreContext.Provider
       value={{
         mounted,
+        lang,
+        setLang,
+        t,
+        catalogMode,
+        setCatalogMode,
         currentRole,
         setCurrentRole,
         currentUser,
@@ -518,6 +557,7 @@ export function StoreProvider({ children }) {
         loginAsCustomer,
         logout,
         products,
+        wholesaleProducts,
         combos,
         categories,
         addCategory,
@@ -538,6 +578,12 @@ export function StoreProvider({ children }) {
         setIsCheckoutOpen,
         isAdminOpen,
         setIsAdminOpen,
+        isTrackOrderOpen,
+        setIsTrackOrderOpen,
+        isOrderSuccessOpen,
+        setIsOrderSuccessOpen,
+        lastPlacedOrder,
+        setLastPlacedOrder,
         activeProductModal,
         setActiveProductModal,
         toasts,
@@ -548,14 +594,14 @@ export function StoreProvider({ children }) {
         updateCartQuantity,
         removeFromCart,
         clearCart,
+        getRecommendations,
         updateProduct,
         addProduct,
         deleteProduct,
         resetProductsToDefault,
-        updateSettings,
+        createOrder,
         generateWhatsAppMessage,
         generateWhatsAppUrl,
-        recordDemoOrder,
         updateOrderStatus,
         deleteOrder
       }}

@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useStore } from "../context/StoreContext";
+import { IconCheck, IconShield, IconX } from "./Icons";
 
 export default function Toast() {
   const { toasts, removeToast } = useStore();
@@ -11,10 +12,6 @@ export default function Toast() {
   return (
     <div className="toast-container">
       {toasts.map((toast) => {
-        let icon = "✓";
-        if (toast.type === "warning") icon = "⚠️";
-        if (toast.type === "info") icon = "ℹ️";
-
         return (
           <div
             key={toast.id}
@@ -22,7 +19,13 @@ export default function Toast() {
             onClick={() => removeToast(toast.id)}
             style={{ cursor: "pointer" }}
           >
-            <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>{icon}</span>
+            {toast.type === "error" ? (
+              <IconX size={15} />
+            ) : toast.type === "warning" || toast.type === "info" ? (
+              <IconShield size={15} />
+            ) : (
+              <IconCheck size={15} />
+            )}
             <span>{toast.message}</span>
           </div>
         );
